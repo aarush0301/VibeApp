@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { plans as initialPlans } from './data.js'
+
+ import { useState, useEffect } from 'react'
+import { plans as initialPlans, users as initialUsers } from './data.js'
 import HomeScreen        from './components/HomeScreen.jsx'
 import MyPlansScreen     from './components/MyPlansScreen.jsx'
 import ProfileScreen     from './components/ProfileScreen.jsx'
@@ -10,10 +11,28 @@ import CreatePlanModal   from './components/CreatePlanModal.jsx'
 const CURRENT_USER_ID = "u1"
 
 function App() {
-  const [screen, setScreen]               = useState("home")
-  const [selectedPlan, setSelectedPlan]   = useState(null)
-  const [plans, setPlans]                 = useState(initialPlans)
+  const [screen, setScreen]                   = useState("home")
+  const [selectedPlan, setSelectedPlan]       = useState(null)
   const [showCreateModal, setShowCreateModal] = useState(false)
+
+  // ── Load plans from localStorage on startup ───────────────────────────────
+  // If nothing saved yet, use the mock data as starting point
+  const [plans, setPlans] = useState(() => {
+    const saved = localStorage.getItem("vibe_plans")
+    if (saved) {
+      return JSON.parse(saved)
+    }
+    return initialPlans
+  })
+
+  // ── Save plans to localStorage whenever they change ───────────────────────
+  useEffect(() => {
+    localStorage.setItem("vibe_plans", JSON.stringify(plans))
+  }, [plans])
+
+  // ─────────────────────────────────────────────────────────────────────────
+  // Handlers
+  // ─────────────────────────────────────────────────────────────────────────
 
   const handleOpenPlan = (plan) => {
     setSelectedPlan(plan)
@@ -44,7 +63,11 @@ function App() {
   const handleAcceptRequest = (planId, userId) => {
     setPlans(plans.map(p =>
       p.id === planId
-        ? { ...p, requestIds: p.requestIds.filter(id => id !== userId), memberIds: [...p.memberIds, userId] }
+        ? {
+            ...p,
+            requestIds: p.requestIds.filter(id => id !== userId),
+            memberIds:  [...p.memberIds, userId],
+          }
         : p
     ))
   }
@@ -73,7 +96,6 @@ function App() {
     ))
   }
 
-  // ── Create a new plan ─────────────────────────────────────────────────────
   const handleCreatePlan = (formData) => {
     const newPlan = {
       ...formData,
@@ -91,6 +113,10 @@ function App() {
 
   const currentPlan = plans.find(p => p.id === selectedPlan?.id)
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // Render
+  // ─────────────────────────────────────────────────────────────────────────
+
   return (
     <div style={{
       maxWidth: "480px",
@@ -101,7 +127,10 @@ function App() {
     }}>
       <div>
         {screen === "home" &&
-          <HomeScreen plans={plans} onOpenPlan={handleOpenPlan} />
+          <HomeScreen
+            plans={plans}
+            onOpenPlan={handleOpenPlan}
+          />
         }
         {screen === "myplans" &&
           <MyPlansScreen
@@ -113,7 +142,10 @@ function App() {
           />
         }
         {screen === "profile" &&
-          <ProfileScreen currentUserId={CURRENT_USER_ID} plans={plans} />
+          <ProfileScreen
+            currentUserId={CURRENT_USER_ID}
+            plans={plans}
+          />
         }
         {screen === "planDetail" && currentPlan &&
           <PlanDetailScreen
@@ -130,7 +162,6 @@ function App() {
         }
       </div>
 
-      {/* Bottom nav */}
       {screen !== "planDetail" && (
         <BottomNav
           currentScreen={screen}
@@ -139,7 +170,6 @@ function App() {
         />
       )}
 
-      {/* Create plan modal */}
       {showCreateModal && (
         <CreatePlanModal
           onClose={() => setShowCreateModal(false)}
