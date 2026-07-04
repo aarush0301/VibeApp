@@ -1,52 +1,94 @@
 import { useState } from 'react'
 import { plans as initialPlans } from './data.js'
-import HomeScreen       from './components/HomeScreen.jsx'
-import MyPlansScreen    from './components/MyPlansScreen.jsx'
-import ProfileScreen    from './components/ProfileScreen.jsx'
-import PlanDetailScreen from './components/PlanDetailScreen.jsx'
-import BottomNav        from './components/BottomNav.jsx'
+import HomeScreen        from './components/HomeScreen.jsx'
+import MyPlansScreen     from './components/MyPlansScreen.jsx'
+import ProfileScreen     from './components/ProfileScreen.jsx'
+import PlanDetailScreen  from './components/PlanDetailScreen.jsx'
+import BottomNav         from './components/BottomNav.jsx'
+import CreatePlanModal   from './components/CreatePlanModal.jsx'
 
-// For now we use a hardcoded "logged in" user
 const CURRENT_USER_ID = "u1"
 
 function App() {
-  const [screen, setScreen]             = useState("home")
-  const [selectedPlan, setSelectedPlan] = useState(null)
+  const [screen, setScreen]               = useState("home")
+  const [selectedPlan, setSelectedPlan]   = useState(null)
+  const [plans, setPlans]                 = useState(initialPlans)
+  const [showCreateModal, setShowCreateModal] = useState(false)
 
-  // Plans now live in state — not just imported data
-  const [plans, setPlans] = useState(initialPlans)
-
-  // Open a plan detail — find the LATEST version from state
   const handleOpenPlan = (plan) => {
     setSelectedPlan(plan)
     setScreen("planDetail")
   }
 
-  // Go back
   const handleBack = () => {
     setSelectedPlan(null)
     setScreen("home")
   }
 
-  // ── Join request ──────────────────────────────────────────────────────────
   const handleJoinRequest = (planId) => {
-    setPlans(plans.map(plan =>
-      plan.id === planId
-        ? { ...plan, requestIds: [...plan.requestIds, CURRENT_USER_ID] }
-        : plan
+    setPlans(plans.map(p =>
+      p.id === planId
+        ? { ...p, requestIds: [...p.requestIds, CURRENT_USER_ID] }
+        : p
     ))
   }
 
-  // ── Cancel request ────────────────────────────────────────────────────────
   const handleCancelRequest = (planId) => {
-    setPlans(plans.map(plan =>
-      plan.id === planId
-        ? { ...plan, requestIds: plan.requestIds.filter(id => id !== CURRENT_USER_ID) }
-        : plan
+    setPlans(plans.map(p =>
+      p.id === planId
+        ? { ...p, requestIds: p.requestIds.filter(id => id !== CURRENT_USER_ID) }
+        : p
     ))
   }
 
-  // Keep selectedPlan in sync with latest plans state
+  const handleAcceptRequest = (planId, userId) => {
+    setPlans(plans.map(p =>
+      p.id === planId
+        ? { ...p, requestIds: p.requestIds.filter(id => id !== userId), memberIds: [...p.memberIds, userId] }
+        : p
+    ))
+  }
+
+  const handleDeclineRequest = (planId, userId) => {
+    setPlans(plans.map(p =>
+      p.id === planId
+        ? { ...p, requestIds: p.requestIds.filter(id => id !== userId) }
+        : p
+    ))
+  }
+
+  const handleAddItineraryItem = (planId, item) => {
+    setPlans(plans.map(p =>
+      p.id === planId
+        ? { ...p, itinerary: [...p.itinerary, item] }
+        : p
+    ))
+  }
+
+  const handleSendMessage = (planId, message) => {
+    setPlans(plans.map(p =>
+      p.id === planId
+        ? { ...p, chat: [...p.chat, message] }
+        : p
+    ))
+  }
+
+  // ── Create a new plan ─────────────────────────────────────────────────────
+  const handleCreatePlan = (formData) => {
+    const newPlan = {
+      ...formData,
+      id:         "PLAN-" + Date.now(),
+      creatorId:  CURRENT_USER_ID,
+      memberIds:  [CURRENT_USER_ID],
+      requestIds: [],
+      itinerary:  [],
+      chat:       [],
+    }
+    setPlans([...plans, newPlan])
+    setShowCreateModal(false)
+    setScreen("myplans")
+  }
+
   const currentPlan = plans.find(p => p.id === selectedPlan?.id)
 
   return (
@@ -59,19 +101,19 @@ function App() {
     }}>
       <div>
         {screen === "home" &&
-          <HomeScreen
-            plans={plans}
-            onOpenPlan={handleOpenPlan}
-          />
+          <HomeScreen plans={plans} onOpenPlan={handleOpenPlan} />
         }
         {screen === "myplans" &&
           <MyPlansScreen
             plans={plans}
             currentUserId={CURRENT_USER_ID}
+            onOpenPlan={handleOpenPlan}
+            onAcceptRequest={handleAcceptRequest}
+            onDeclineRequest={handleDeclineRequest}
           />
         }
         {screen === "profile" &&
-          <ProfileScreen />
+          <ProfileScreen currentUserId={CURRENT_USER_ID} plans={plans} />
         }
         {screen === "planDetail" && currentPlan &&
           <PlanDetailScreen
@@ -80,12 +122,29 @@ function App() {
             onBack={handleBack}
             onJoinRequest={handleJoinRequest}
             onCancelRequest={handleCancelRequest}
+            onAddItineraryItem={handleAddItineraryItem}
+            onSendMessage={handleSendMessage}
+            onAcceptRequest={handleAcceptRequest}
+            onDeclineRequest={handleDeclineRequest}
           />
         }
       </div>
 
+      {/* Bottom nav */}
       {screen !== "planDetail" && (
-        <BottomNav currentScreen={screen} onNavigate={setScreen} />
+        <BottomNav
+          currentScreen={screen}
+          onNavigate={setScreen}
+          onCreatePlan={() => setShowCreateModal(true)}
+        />
+      )}
+
+      {/* Create plan modal */}
+      {showCreateModal && (
+        <CreatePlanModal
+          onClose={() => setShowCreateModal(false)}
+          onCreatePlan={handleCreatePlan}
+        />
       )}
     </div>
   )
