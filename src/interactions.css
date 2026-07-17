@@ -1,0 +1,90 @@
+/* Universal press feedback for buttons */
+.tap {
+  transition: transform 0.15s ease, opacity 0.15s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.tap:active {
+  transform: scale(0.95);
+  opacity: 0.85;
+}
+
+/* Cards — lift on hover (desktop), press down on tap (mobile) */
+.card-tap {
+  transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s ease, border-color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.card-tap:active {
+  transform: scale(0.98);
+}
+@media (hover: hover) {
+  .card-tap:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.45);
+    border-color: #4C547D;
+  }
+}
+
+/* Filter chips and vibe pills */
+.chip-tap {
+  transition: transform 0.15s ease, background 0.2s ease, color 0.2s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.chip-tap:active {
+  transform: scale(0.92);
+}
+
+/* Bottom nav buttons */
+.nav-tap {
+  transition: transform 0.15s ease, color 0.2s ease;
+}
+.nav-tap:active {
+  transform: scale(0.88);
+}
+
+/* Create button — bigger squish since it's the main action */
+.fab-tap {
+  transition: transform 0.15s cubic-bezier(0.34,1.56,0.64,1);
+}
+.fab-tap:active {
+  transform: scale(0.85);
+}
+
+/* Cards fading in as they appear */
+.fade-in {
+  animation: fadeIn 0.3s ease both;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Bottom sheets sliding up */
+.slide-up {
+  animation: slideUp 0.35s cubic-bezier(0.16,1,0.3,1) both;
+}
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to   { transform: translateY(0); }
+}
+
+/* Backdrop fading in */
+.backdrop-fade {
+  animation: backdropFade 0.25s ease both;
+}
+@keyframes backdropFade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Tab underline sliding smoothly */
+.tab-btn {
+  transition: color 0.2s ease, border-bottom 0.25s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* Send button pulse when message sent */
+.send-tap {
+  transition: transform 0.15s ease;
+}
+.send-tap:active {
+  transform: scale(0.85) rotate(-10deg);
+}

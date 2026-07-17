@@ -1,6 +1,6 @@
 
  import { useState, useEffect } from 'react'
-import { plans as initialPlans, users as initialUsers } from './data.js'
+import { plans as initialPlans } from './data.js'
 import HomeScreen        from './components/HomeScreen.jsx'
 import MyPlansScreen     from './components/MyPlansScreen.jsx'
 import ProfileScreen     from './components/ProfileScreen.jsx'
@@ -127,11 +127,12 @@ function App() {
     }}>
       <div>
         {screen === "home" &&
-          <HomeScreen
-            plans={plans}
-            onOpenPlan={handleOpenPlan}
-          />
-        }
+  <HomeScreen
+    plans={plans}
+    onOpenPlan={handleOpenPlan}
+    currentUserId={CURRENT_USER_ID}
+  />
+}
         {screen === "myplans" &&
           <MyPlansScreen
             plans={plans}

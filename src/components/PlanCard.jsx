@@ -1,102 +1,65 @@
-// The type colours — each plan type gets its own colour
-const typeColors = {
-  Party:        { background: "#FAECE7", color: "#1f3d7d" },
-  Trip:         { background: "#E1F5EE", color: "#4671f1" },
-  Outing:       { background: "#EEEDFE", color: "#3C3489" },
-  "Food Run":   { background: "#d2c3aa", color: "#0e216ee7" },
-  Sports:       { background: "#EAF3DE", color: "#484bf7" },
-  "Study Sesh": { background: "#E6F1FB", color: "#185FA5" },
-  Other:        { background: "#F1EFE8", color: "#266993" },
-}
+import { T, TYPE_CONFIG, getAvatarColor, formatDate } from '../theme.js'
 
-function PlanCard({ plan }) {
-  // Pull the right colours for this plan's type
-  const colors = typeColors[plan.type] || typeColors.Other
+function PlanCard({ plan, creatorName }) {
+  const config    = TYPE_CONFIG[plan.type] || TYPE_CONFIG.Other
+  const spotsLeft = plan.maxMembers - plan.memberIds.length
+  const initials  = creatorName
+    ? creatorName.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+    : "??"
 
   return (
-    <div style={styles.card}>
-
-      {/* Type badge — coloured pill showing plan type */}
-      <div style={{
-        ...styles.badge,
-        backgroundColor: colors.background,
-        color: colors.color,
-      }}>
-        {plan.type}
+    <div style={styles.card} className="card-tap fade-in">
+      <div style={styles.topRow}>
+        <span style={{ ...styles.badge, background: config.bg, color: config.color, border: `1px solid ${config.border}` }}>
+          <span style={{ ...styles.dot, background: config.dot }} />
+          {plan.type}
+        </span>
+        <span style={styles.visibility}>{plan.isPublic ? "🌍 Public" : "🔒 Private"}</span>
       </div>
 
-      {/* Plan title */}
       <h2 style={styles.title}>{plan.title}</h2>
-
-      {/* Description */}
       <p style={styles.description}>{plan.description}</p>
 
-      {/* Info row — location, date, spots */}
       <div style={styles.infoRow}>
-        <span>📍 {plan.location}</span>
-        <span>📅 {plan.date}</span>
-        <span>👥 {plan.memberIds.length}/{plan.maxMembers}</span>
+        <span style={styles.infoPill}>📍 {plan.location}</span>
+        <span style={styles.infoPill}>📅 {formatDate(plan.date)}</span>
+        <span style={styles.infoPill}>🕐 {plan.time}</span>
       </div>
 
-      {/* Public or Private label */}
-      {plan.isPublic
-        ? <p style={styles.publicLabel}>🌍 Public</p>
-        : <p style={styles.privateLabel}>🔒 Private</p>
-      }
-
+      <div style={styles.bottomRow}>
+        <div style={styles.creatorRow}>
+          <div style={{ ...styles.avatar, background: getAvatarColor(creatorName || "x") }}>
+            {initials}
+          </div>
+          <span style={styles.creatorName}>{creatorName || "Unknown"}</span>
+        </div>
+        <div style={{
+          ...styles.spots,
+          color:      spotsLeft <= 2 ? "#FF8060" : "#50D4A0",
+          background: spotsLeft <= 2 ? "#2D1810" : "#0D2820",
+        }}>
+          {spotsLeft > 0 ? `${spotsLeft} spots left` : "Full"}
+        </div>
+      </div>
     </div>
   )
 }
 
-// ─── Styles ──────────────────────────────────────────────────────────────────
 const styles = {
-  card: {
-    backgroundColor: "#ffffff",
-    border: "1px solid #E8E6E1",
-    borderRadius: "16px",
-    padding: "16px",
-    marginBottom: "12px",
-  },
-  badge: {
-    display: "inline-block",
-    fontSize: "12px",
-    fontWeight: "600",
-    padding: "4px 12px",
-    borderRadius: "20px",
-    marginBottom: "8px",
-  },
-  title: {
-    margin: "0 0 6px 0",
-    fontSize: "17px",
-    fontWeight: "700",
-    color: "#1A1917",
-  },
-  description: {
-    margin: "0 0 12px 0",
-    fontSize: "13px",
-    color: "#6B6864",
-    lineHeight: "1.5",
-  },
-  infoRow: {
-    display: "flex",
-    gap: "14px",
-    fontSize: "12px",
-    color: "#6B6864",
-    marginBottom: "10px",
-    flexWrap: "wrap",
-  },
-  publicLabel: {
-    margin: 0,
-    fontSize: "12px",
-    color: "#1D9E75",
-    fontWeight: "500",
-  },
-  privateLabel: {
-    margin: 0,
-    fontSize: "12px",
-    color: "#D85A30",
-    fontWeight: "500",
-  },
+  card:        { background: T.card, borderRadius: 20, padding: "16px 18px", marginBottom: 14, border: `1px solid ${T.border}`, boxShadow: "0 4px 20px rgba(0,0,0,0.3)" },
+  topRow:      { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 },
+  badge:       { display: "inline-flex", alignItems: "center", gap: 5, fontSize: 12, fontWeight: "600", padding: "4px 10px", borderRadius: 20 },
+  dot:         { width: 6, height: 6, borderRadius: "50%", flexShrink: 0 },
+  visibility:  { fontSize: 11, color: T.textMut, fontWeight: "500" },
+  title:       { fontSize: 17, fontWeight: "700", color: T.text, marginBottom: 6, lineHeight: 1.3 },
+  description: { fontSize: 13, color: T.textSec, lineHeight: 1.55, marginBottom: 12, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" },
+  infoRow:     { display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 14 },
+  infoPill:    { fontSize: 12, color: T.textSec, background: T.muted, padding: "4px 10px", borderRadius: 20, border: `1px solid ${T.chip}` },
+  bottomRow:   { display: "flex", justifyContent: "space-between", alignItems: "center" },
+  creatorRow:  { display: "flex", alignItems: "center", gap: 8 },
+  avatar:      { width: 28, height: 28, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 10, fontWeight: "700", flexShrink: 0 },
+  creatorName: { fontSize: 12, color: T.textMut, fontWeight: "500" },
+  spots:       { fontSize: 11, fontWeight: "600", padding: "4px 10px", borderRadius: 20 },
 }
 
 export default PlanCard

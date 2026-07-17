@@ -1,83 +1,51 @@
-import PlanCard from './PlanCard.jsx'
 import { users } from '../data.js'
+import { T, getAvatarColor } from '../theme.js'
+import PlanCard from './PlanCard.jsx'
 
 function MyPlansScreen({ plans, currentUserId, onOpenPlan, onAcceptRequest, onDeclineRequest }) {
-
-  // Plans this user created
+  const getUserById  = id => users.find(u => u.id === id) || { name: "Unknown", college: "" }
   const createdPlans = plans.filter(p => p.creatorId === currentUserId)
-
-  // Plans this user joined (but didn't create)
-  const joinedPlans = plans.filter(p =>
-    p.memberIds.includes(currentUserId) && p.creatorId !== currentUserId
-  )
-
-  // Total pending requests across all created plans
+  const joinedPlans  = plans.filter(p => p.memberIds.includes(currentUserId) && p.creatorId !== currentUserId)
   const totalPending = createdPlans.reduce((total, p) => total + p.requestIds.length, 0)
 
-  // Helper to get user by id
-  const getUserById = (id) => users.find(u => u.id === id) || { name: "Unknown", college: "" }
-
   return (
-    <div style={{ padding: "20px 16px 100px" }}>
+    <div style={styles.screen}>
+      <div style={styles.header}>
+        <h1 style={styles.heading}>My Plans</h1>
+        {totalPending > 0 && <span style={styles.pendingBadge}>{totalPending} pending</span>}
+      </div>
 
-      {/* Header */}
-      <h1 style={styles.heading}>My Plans 📋</h1>
-
-      {/* Pending requests banner */}
       {totalPending > 0 && (
         <div style={styles.pendingBanner}>
           ⏳ You have {totalPending} pending join request{totalPending !== 1 ? "s" : ""}
         </div>
       )}
 
-      {/* ── Plans I Created ── */}
       {createdPlans.length > 0 && (
         <div style={{ marginBottom: 28 }}>
           <p style={styles.sectionLabel}>Plans you created</p>
-
           {createdPlans.map(plan => (
             <div key={plan.id}>
-              {/* Plan card — tappable */}
               <div onClick={() => onOpenPlan(plan)} style={{ cursor: "pointer" }}>
-                <PlanCard plan={plan} />
+                <PlanCard plan={plan} creatorName={getUserById(plan.creatorId)?.name} />
               </div>
-
-              {/* Pending requests for this plan */}
               {plan.requestIds.length > 0 && (
                 <div style={styles.requestsBox}>
-                  <p style={styles.requestsTitle}>
-                    ⏳ {plan.requestIds.length} request{plan.requestIds.length !== 1 ? "s" : ""} waiting
-                  </p>
-
+                  <p style={styles.requestsTitle}>⏳ {plan.requestIds.length} request{plan.requestIds.length !== 1 ? "s" : ""} waiting</p>
                   {plan.requestIds.map(uid => {
                     const u = getUserById(uid)
                     return (
                       <div key={uid} style={styles.requestRow}>
-                        {/* Avatar */}
-                        <div style={styles.avatar}>
+                        <div style={{ ...styles.avatar, background: getAvatarColor(u.name) }}>
                           {u.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
                         </div>
-
-                        {/* Info */}
                         <div style={{ flex: 1 }}>
-                          <div style={styles.requestName}>{u.name}</div>
-                          <div style={styles.requestSub}>{u.college} · {u.year} yr</div>
+                          <div style={{ fontSize: 13, fontWeight: "600", color: T.text }}>{u.name}</div>
+                          <div style={{ fontSize: 11, color: T.textMut, marginTop: 2 }}>{u.college} · {u.year} yr</div>
                         </div>
-
-                        {/* Buttons */}
                         <div style={{ display: "flex", gap: 6 }}>
-                          <button
-                            onClick={() => onAcceptRequest(plan.id, uid)}
-                            style={styles.acceptBtn}
-                          >
-                            ✓ Accept
-                          </button>
-                          <button
-                            onClick={() => onDeclineRequest(plan.id, uid)}
-                            style={styles.declineBtn}
-                          >
-                            ✕
-                          </button>
+                          <button onClick={() => onAcceptRequest(plan.id, uid)} style={styles.acceptBtn}>✓ Accept</button>
+                          <button onClick={() => onDeclineRequest(plan.id, uid)} style={styles.declineBtn}>✕</button>
                         </div>
                       </div>
                     )
@@ -89,46 +57,41 @@ function MyPlansScreen({ plans, currentUserId, onOpenPlan, onAcceptRequest, onDe
         </div>
       )}
 
-      {/* ── Plans I Joined ── */}
       {joinedPlans.length > 0 && (
         <div>
           <p style={styles.sectionLabel}>Plans you joined</p>
           {joinedPlans.map(plan => (
             <div key={plan.id} onClick={() => onOpenPlan(plan)} style={{ cursor: "pointer" }}>
-              <PlanCard plan={plan} />
+              <PlanCard plan={plan} creatorName={getUserById(plan.creatorId)?.name} />
             </div>
           ))}
         </div>
       )}
 
-      {/* Empty state */}
       {createdPlans.length === 0 && joinedPlans.length === 0 && (
-        <div style={styles.emptyState}>
-          <p style={{ fontSize: 40, margin: "0 0 12px" }}>🌴</p>
-          <p style={{ fontSize: 15, fontWeight: "600", color: "#1A1917" }}>No plans yet</p>
-          <p style={{ fontSize: 13, color: "#9E9B96", margin: "4px 0 0" }}>
-            Discover plans or create your own!
-          </p>
+        <div style={{ textAlign: "center", padding: "60px 0" }}>
+          <p style={{ fontSize: 40, marginBottom: 12 }}>🌴</p>
+          <p style={{ fontSize: 15, fontWeight: "600", color: T.text }}>No plans yet</p>
+          <p style={{ fontSize: 13, color: T.textMut, marginTop: 4 }}>Discover plans or create your own!</p>
         </div>
       )}
-
     </div>
   )
 }
 
 const styles = {
-  heading:       { fontSize: "22px", fontWeight: "700", color: "#1A1917", margin: "0 0 16px" },
-  pendingBanner: { background: "#FFF8EC", border: "1px solid #FAC775", borderRadius: 12, padding: "12px 16px", fontSize: "14px", fontWeight: "500", color: "#854F0B", marginBottom: 20 },
-  sectionLabel:  { fontSize: "12px", fontWeight: "600", color: "#9E9B96", textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 10px" },
-  requestsBox:   { background: "#FFF8EC", border: "1px solid #FAC775", borderRadius: 12, padding: "12px 14px", marginTop: -8, marginBottom: 14 },
-  requestsTitle: { fontSize: "13px", fontWeight: "600", color: "#854F0B", margin: "0 0 10px" },
+  screen:        { padding: "0 16px 100px", minHeight: "100vh", background: T.bg },
+  header:        { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "52px 0 20px" },
+  heading:       { fontSize: 24, fontWeight: "800", color: T.text, letterSpacing: -0.5 },
+  pendingBadge:  { background: "#2A2008", color: T.yellow, fontSize: 12, fontWeight: "700", padding: "4px 12px", borderRadius: 20, border: `1px solid #4A3800` },
+  pendingBanner: { background: "#2A2008", border: `1px solid #4A3800`, borderRadius: 12, padding: "12px 16px", fontSize: 14, fontWeight: "500", color: T.yellow, marginBottom: 20 },
+  sectionLabel:  { fontSize: 12, fontWeight: "700", color: T.textMut, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 10px" },
+  requestsBox:   { background: "#2A2008", border: `1px solid #4A3800`, borderRadius: 12, padding: "12px 14px", marginTop: -8, marginBottom: 14 },
+  requestsTitle: { fontSize: 13, fontWeight: "600", color: T.yellow, margin: "0 0 10px" },
   requestRow:    { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 },
-  avatar:        { width: 36, height: 36, borderRadius: "50%", background: "#EF9F27", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: 12, flexShrink: 0 },
-  requestName:   { fontSize: "13px", fontWeight: "600", color: "#1A1917" },
-  requestSub:    { fontSize: "11px", color: "#6B6864", marginTop: 2 },
-  acceptBtn:     { background: "#1D9E75", color: "#fff", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: "12px", fontFamily: "inherit", cursor: "pointer", fontWeight: "600" },
-  declineBtn:    { background: "transparent", color: "#D85A30", border: "1px solid #D85A30", borderRadius: 8, padding: "6px 10px", fontSize: "12px", fontFamily: "inherit", cursor: "pointer" },
-  emptyState:    { textAlign: "center", padding: "60px 0" },
+  avatar:        { width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: 12, flexShrink: 0 },
+  acceptBtn:     { background: T.green, color: "#fff", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: "600" },
+  declineBtn:    { background: "transparent", color: "#FF8060", border: "1px solid #FF8060", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "inherit", cursor: "pointer" },
 }
 
 export default MyPlansScreen
