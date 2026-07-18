@@ -1,9 +1,8 @@
 import { useState } from 'react'
-import { users } from '../data.js'
 import { T, TYPE_CONFIG, getAvatarColor } from '../theme.js'
 import AIChatPanel from './AIChatPanel.jsx'
 
-function PlanDetailScreen({ plan, currentUserId, onBack, onJoinRequest, onCancelRequest, onAddItineraryItem, onSendMessage, onAcceptRequest, onDeclineRequest }) {
+function PlanDetailScreen({ plan, users, currentUserId, onBack, onJoinRequest, onCancelRequest, onAddItineraryItem, onSendMessage, onAcceptRequest, onDeclineRequest }) {
   const [activeTab, setActiveTab]             = useState("info")
   const [newItemTime, setNewItemTime]         = useState("")
   const [newItemActivity, setNewItemActivity] = useState("")

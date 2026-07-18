@@ -1,8 +1,8 @@
-import { users } from '../data.js'
+
 import { T, getAvatarColor } from '../theme.js'
 import PlanCard from './PlanCard.jsx'
 
-function MyPlansScreen({ plans, currentUserId, onOpenPlan, onAcceptRequest, onDeclineRequest }) {
+function MyPlansScreen({ plans, users, currentUserId, onOpenPlan, onAcceptRequest, onDeclineRequest }) {
   const getUserById  = id => users.find(u => u.id === id) || { name: "Unknown", college: "" }
   const createdPlans = plans.filter(p => p.creatorId === currentUserId)
   const joinedPlans  = plans.filter(p => p.memberIds.includes(currentUserId) && p.creatorId !== currentUserId)

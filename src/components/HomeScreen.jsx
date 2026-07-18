@@ -1,11 +1,11 @@
 import { useState } from 'react'
-import { users } from '../data.js'
+
 import { T, getAvatarColor } from '../theme.js'
 import PlanCard from './PlanCard.jsx'
 
 const FILTERS = ["All", "Party", "Trip", "Outing", "Food Run", "Sports", "Study Sesh"]
 
-function HomeScreen({ plans, onOpenPlan, currentUserId }) {
+function HomeScreen({ plans, users, onOpenPlan, currentUserId }) {
   const [activeFilter, setActiveFilter] = useState("All")
   const currentUser  = users.find(u => u.id === currentUserId)
   const getFirstName = () => currentUser?.name?.split(" ")[0] || "there"

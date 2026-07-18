@@ -1,8 +1,12 @@
 
-import { users } from '../data.js'
+import { useState } from 'react'
 import { T, getAvatarColor } from '../theme.js'
+import EditProfileModal from './EditProfileModal.jsx'
 
-function ProfileScreen({ currentUserId, plans }) {
+function ProfileScreen({ currentUserId, plans, users, onUpdateProfile }) {
+  const [showEdit, setShowEdit] = useState(false)
+
+
   const user = users.find(u => u.id === currentUserId)
   if (!user) return null
 
@@ -14,9 +18,13 @@ function ProfileScreen({ currentUserId, plans }) {
     <div style={styles.screen}>
       {/* Hero */}
       <div style={styles.hero}>
-        <div style={{ ...styles.avatar, background: getAvatarColor(user.name) }}>{initials}</div>
-        <h1 style={styles.name}>{user.name}</h1>
-        <p style={styles.college}>{user.college}</p>
+  <div style={{ ...styles.avatar, background: getAvatarColor(user.name) }}>{initials}</div>
+  <h1 style={styles.name}>{user.name}</h1>
+  <p style={styles.college}>{user.college}</p>
+
+  <button onClick={() => setShowEdit(true)} style={styles.editBtn} className="tap">
+    ✏️ Edit Profile
+  </button>
         <div style={styles.statsRow}>
           {[["Year", user.year], ["Age", user.age], ["Created", plansCreated], ["Joined", plansJoined]].map(([label, value], i, arr) => (
             <div key={label} style={{ display: "flex", alignItems: "center" }}>
@@ -61,6 +69,16 @@ function ProfileScreen({ currentUserId, plans }) {
           </div>
         </div>
       </div>
+      {showEdit && (
+        <EditProfileModal
+          user={user}
+          onClose={() => setShowEdit(false)}
+          onSave={(updatedData) => {
+            onUpdateProfile(updatedData)
+            setShowEdit(false)
+          }}
+        />
+      )}
     </div>
   )
 }
@@ -80,6 +98,7 @@ const styles = {
   sectionLabel: { fontSize: 11, fontWeight: "700", color: T.textMut, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 },
   bioText:      { fontSize: 14, color: T.textSec, lineHeight: 1.6 },
   vibePill:     { background: T.muted, color: T.textSec, fontSize: 13, padding: "6px 14px", borderRadius: 20, fontWeight: "500", border: `1px solid ${T.chip}` },
+  editBtn:      { background: T.muted, color: T.textSec, border: `1px solid ${T.chip}`, borderRadius: 20, padding: "7px 18px", fontSize: 13, fontWeight: "600", fontFamily: "inherit", cursor: "pointer", marginTop: 4 },
 }
 
 export default ProfileScreen

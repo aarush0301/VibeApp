@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { T } from '../theme.js'
+import LocationSearchInput from './LocationSearchInput.jsx'
 
 const PLAN_TYPES = ["Party", "Trip", "Outing", "Food Run", "Sports", "Study Sesh", "Other"]
-const LOCATIONS  = ["Indiranagar", "Koramangala", "HSR Layout", "Whitefield", "JP Nagar", "Coorg", "Nandi Hills", "Goa", "Mysore", "Other"]
 const VIBES      = ["🎉 Party animal", "🏕️ Adventurous", "🤙 Chill", "🏃 Active", "🍕 Foodie", "🎮 Gamer", "💬 Outgoing", "🎨 Creative", "🌿 Nature lover"]
 
 function CreatePlanModal({ onClose, onCreatePlan }) {
   const [form, setForm] = useState({
     title: "", type: "Party", location: "", date: "", time: "",
-    description: "", maxMembers: "8", isPublic: true, tags: [], itineraryPermission: "creator",
+    description: "", maxMembers: "8", isPublic: true, tags: [], itineraryPermission: "creator", customType: "",
   })
   const [error, setError] = useState("")
 
@@ -18,13 +18,21 @@ function CreatePlanModal({ onClose, onCreatePlan }) {
     else if (form.tags.length < 4) update("tags", [...form.tags, tag])
   }
 
-  const handleSubmit = () => {
-    if (!form.title.trim()) return setError("Give your plan a title!")
-    if (!form.location)     return setError("Pick a location!")
-    if (!form.date)         return setError("Pick a date!")
-    onCreatePlan({ ...form, maxMembers: parseInt(form.maxMembers) || 8 })
-  }
+ const handleSubmit = () => {
+  if (!form.title.trim()) return setError("Give your plan a title!")
+  if (!form.location)     return setError("Pick a location!")
+  if (!form.date)         return setError("Pick a date!")
+  if (form.type === "Other" && !form.customType.trim()) return setError("Tell us what kind of plan this is!")
 
+  
+  const finalType = form.type === "Other" ? form.customType.trim() : form.type
+
+  onCreatePlan({
+    ...form,
+    type: finalType,
+    maxMembers: parseInt(form.maxMembers) || 8,
+  })
+}
   return (
     <div style={styles.backdrop} className="backdrop-fade">
   <div style={styles.sheet} className="slide-up">
@@ -39,23 +47,40 @@ function CreatePlanModal({ onClose, onCreatePlan }) {
           <label style={styles.label}>Plan name *</label>
           <input value={form.title} onChange={e => update("title", e.target.value)} placeholder="e.g. Rooftop Party 🎉" style={styles.input} />
 
-          <label style={styles.label} className='chip-tap'>Type</label>
-          <div style={styles.chipRow}>
-            {PLAN_TYPES.map(type => (
-              <button key={type} onClick={() => update("type", type)} className="chip-tap" style={{ ...styles.chip, background: form.type === type ? T.orange : T.muted, color: "#fff", fontWeight: form.type === type ? "700" : "400" }}>
-                {type}
-              </button>
-            ))}
-          </div>
+          <label style={styles.label}>Type</label>
+<div style={styles.chipRow} className="chip-tap">
+  {PLAN_TYPES.map(type => (
+    <button
+      key={type}
+      onClick={() => update("type", type)}
+      style={{
+        ...styles.chip,
+        background:  form.type === type ? T.orange : T.muted,
+        color:       "#fff",
+        fontWeight:  form.type === type ? "700" : "400",
+      }}
+    >
+      {type}
+    </button>
+  ))}
+</div>
+
+
+{form.type === "Other" && (
+  <input
+    value={form.customType}
+    onChange={e => update("customType", e.target.value)}
+    placeholder="What kind of plan is this?"
+    style={{ ...styles.input, marginTop: -8 }}
+  />
+)}
 
           <label style={styles.label}>Location *</label>
-          <div style={styles.chipRow}>
-            {LOCATIONS.map(loc => (
-              <button key={loc} onClick={() => update("location", loc)} className="chip-tap" style={{ ...styles.chip, background: form.location === loc ? T.purple : T.muted, color: "#fff", fontWeight: form.location === loc ? "700" : "400" }}>
-                {loc}
-              </button>
-            ))}
-          </div>
+<LocationSearchInput
+  value={form.location}
+  onChange={(val) => update("location", val)}
+/>
+<div style={{ marginBottom: 16 }} />
 
           <div style={{ display: "flex", gap: 10 }}>
             <div style={{ flex: 1 }}>
