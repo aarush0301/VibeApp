@@ -8,7 +8,7 @@ const VIBES      = ["🎉 Party animal", "🏕️ Adventurous", "🤙 Chill", "�
 function CreatePlanModal({ onClose, onCreatePlan }) {
   const [form, setForm] = useState({
     title: "", type: "Party", location: "", date: "", time: "",
-    description: "", maxMembers: "8", isPublic: true, tags: [], itineraryPermission: "creator", customType: "",
+    description: "", maxMembers: "8", isPublic: true, tags: [], itineraryPermission: "creator", customType: "", longitude: null, latitude: null,
   })
   const [error, setError] = useState("")
 
@@ -78,7 +78,10 @@ function CreatePlanModal({ onClose, onCreatePlan }) {
           <label style={styles.label}>Location *</label>
 <LocationSearchInput
   value={form.location}
-  onChange={(val) => update("location", val)}
+  onChange={(val, lat, lng) => {
+    update("location", val)
+    setForm(f => ({...f, latitude: lat, longitude: lng}))
+    }}
 />
 <div style={{ marginBottom: 16 }} />
 

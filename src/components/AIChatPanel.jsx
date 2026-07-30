@@ -95,6 +95,8 @@ Instructions:
 - Only use real accurate coordinates
 - Keep it to 3 to 5 suggestions max
 - You can only READ the itinerary not change it
+- You can also suggest if any plan in the itinerary should better be changed as they might be closed or currently it might not be the best to go for it and suggest alternatives if they are better.
+
 `
 
       const result = await model.generateContent(prompt)

@@ -119,6 +119,8 @@ function App() {
       creator_id:            CURRENT_USER_ID,
       tags:                  formData.tags,
       itinerary_permission:  formData.itineraryPermission,
+      latitude: formData.latitude,
+      longitude: formData.longitude,
     })
 
     // Creator automatically becomes a member

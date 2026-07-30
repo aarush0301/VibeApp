@@ -50,16 +50,14 @@ function LocationSearchInput({ value, onChange }) {
   }
 
   const selectSuggestion = (place) => {
-    // Build a clean short label like "Andheri, Mumbai"
-    const parts = place.display_name.split(",").map(p => p.trim())
-    const label = parts.slice(0, 2).join(", ")
+  const parts = place.display_name.split(",").map(p => p.trim())
+  const label = parts.slice(0, 2).join(", ")
 
-    setQuery(label)
-    onChange(label)
-    setSuggestions([])
-    setShowDropdown(false)
-  }
-
+  setQuery(label)
+  onChange(label, parseFloat(place.lat), parseFloat(place.lon))
+  setSuggestions([])
+  setShowDropdown(false)
+}
   return (
     <div ref={wrapperRef} style={{ position: "relative" }}>
       <input

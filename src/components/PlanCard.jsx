@@ -1,6 +1,6 @@
 import { T, TYPE_CONFIG, getAvatarColor, formatDate } from '../theme.js'
 
-function PlanCard({ plan, creatorName }) {
+function PlanCard({ plan, creatorName, distance }) {
   const config    = TYPE_CONFIG[plan.type] || TYPE_CONFIG.Other
   const spotsLeft = plan.maxMembers - plan.memberIds.length
   const initials  = creatorName
@@ -21,10 +21,15 @@ function PlanCard({ plan, creatorName }) {
       <p style={styles.description}>{plan.description}</p>
 
       <div style={styles.infoRow}>
-        <span style={styles.infoPill}>📍 {plan.location}</span>
-        <span style={styles.infoPill}>📅 {formatDate(plan.date)}</span>
-        <span style={styles.infoPill}>🕐 {plan.time}</span>
-      </div>
+  <span style={styles.infoPill}>📍 {plan.location}</span>
+  <span style={styles.infoPill}>📅 {formatDate(plan.date)}</span>
+  <span style={styles.infoPill}>🕐 {plan.time}</span>
+  {distance !== null && distance !== undefined && (
+    <span style={{ ...styles.infoPill, color: "#50D4A0", background: "#0D2820", borderColor: "#1A4535" }}>
+      📏 {distance < 1 ? "< 1 km" : `${distance.toFixed(1)} km away`}
+    </span>
+  )}
+</div>
 
       <div style={styles.bottomRow}>
         <div style={styles.creatorRow}>

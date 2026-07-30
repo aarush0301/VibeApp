@@ -33,6 +33,8 @@ export async function fetchAllData() {
     creatorId:           plan.creator_id,
     tags:                plan.tags || [],
     itineraryPermission: plan.itinerary_permission,
+    latitude: plan.latitude,
+    longitude: plan.longitude,
 
     memberIds: (membersData || [])
       .filter(m => m.plan_id === plan.id)
