@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { T, getAvatarColor } from '../theme.js'
 import EditProfileModal from './EditProfileModal.jsx'
 
-function ProfileScreen({ currentUserId, plans, users, onUpdateProfile }) {
+function ProfileScreen({ currentUserId, plans, users, onUpdateProfile, onLogout }) {
   const [showEdit, setShowEdit] = useState(false)
 
 
@@ -69,6 +69,13 @@ function ProfileScreen({ currentUserId, plans, users, onUpdateProfile }) {
           </div>
         </div>
       </div>
+
+       <div style={{ padding: "0 16px", marginBottom: 20 }}>
+        <button onClick={onLogout} className="tap" style={{ width: "100%", padding: 13, borderRadius: 12, border: "1.5px solid #4A2A1A", background: "transparent", color: "#FF8060", fontSize: 14, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" }}>
+          Log Out
+        </button>
+      </div>
+      
       {showEdit && (
         <EditProfileModal
           user={user}

@@ -8,8 +8,7 @@ import ProfileScreen     from './components/ProfileScreen.jsx'
 import PlanDetailScreen  from './components/PlanDetailScreen.jsx'
 import BottomNav         from './components/BottomNav.jsx'
 import CreatePlanModal   from './components/CreatePlanModal.jsx'
-
-const CURRENT_USER_ID = "u1"
+import AuthScreen        from './components/AuthScreen.jsx'
 
 function App() {
   const [screen, setScreen]                   = useState("home")
@@ -19,6 +18,8 @@ function App() {
   const [users, setUsers]                     = useState([])
   const [loading, setLoading]                 = useState(true)
   const [databaseError, setDatabaseError]     = useState(null)
+  const [currentUserId, setCurrentUserId]     = useState(null)
+  const [authChecked, setAuthChecked]         = useState(false)
 
   // ── Load everything from Supabase ─────────────────────────────────────────
   const loadData = async () => {
@@ -36,10 +37,24 @@ function App() {
     }
   }
 
-  // Run once when the app first opens
+  // Check if a session already exists (so refreshing doesn't log you out)
   useEffect(() => {
-    window.setTimeout(loadData, 0)
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession()
+      if (data.session) {
+        setCurrentUserId(data.session.user.id)
+      }
+      setAuthChecked(true)
+    }
+    checkSession()
   }, [])
+
+  // Once we know who's logged in, load their data
+  useEffect(() => {
+    if (currentUserId) {
+      loadData()
+    }
+  }, [currentUserId])
 
   const handleOpenPlan = (plan) => {
     setSelectedPlanId(plan.id)
@@ -51,14 +66,22 @@ function App() {
     setScreen("home")
   }
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    setCurrentUserId(null)
+    setPlans([])
+    setUsers([])
+    setScreen("home")
+  }
+
   // ── Join request ───────────────────────────────────────────────────────────
   const handleJoinRequest = async (planId) => {
-    await supabase.from('plan_requests').insert({ plan_id: planId, user_id: CURRENT_USER_ID })
+    await supabase.from('plan_requests').insert({ plan_id: planId, user_id: currentUserId })
     await loadData()
   }
 
   const handleCancelRequest = async (planId) => {
-    await supabase.from('plan_requests').delete().eq('plan_id', planId).eq('user_id', CURRENT_USER_ID)
+    await supabase.from('plan_requests').delete().eq('plan_id', planId).eq('user_id', currentUserId)
     await loadData()
   }
 
@@ -88,20 +111,20 @@ function App() {
   }
 
   const handleUpdateProfile = async (updatedData) => {
-  await supabase
-    .from('users')
-    .update({
-      name:    updatedData.name,
-      college: updatedData.college,
-      year:    updatedData.year,
-      age:     updatedData.age,
-      bio:     updatedData.bio,
-      vibes:   updatedData.vibes,
-    })
-    .eq('id', CURRENT_USER_ID)
+    await supabase
+      .from('users')
+      .update({
+        name:    updatedData.name,
+        college: updatedData.college,
+        year:    updatedData.year,
+        age:     updatedData.age,
+        bio:     updatedData.bio,
+        vibes:   updatedData.vibes,
+      })
+      .eq('id', currentUserId)
 
-  await loadData()
-}
+    await loadData()
+  }
 
   const handleCreatePlan = async (formData) => {
     const newPlanId = "PLAN-" + Date.now()
@@ -116,15 +139,15 @@ function App() {
       description:           formData.description,
       is_public:             formData.isPublic,
       max_members:           formData.maxMembers,
-      creator_id:            CURRENT_USER_ID,
+      creator_id:            currentUserId,
       tags:                  formData.tags,
       itinerary_permission:  formData.itineraryPermission,
-      latitude: formData.latitude,
-      longitude: formData.longitude,
+      latitude:              formData.latitude,
+      longitude:             formData.longitude,
     })
 
     // Creator automatically becomes a member
-    await supabase.from('plan_members').insert({ plan_id: newPlanId, user_id: CURRENT_USER_ID })
+    await supabase.from('plan_members').insert({ plan_id: newPlanId, user_id: currentUserId })
 
     await loadData()
     setShowCreateModal(false)
@@ -133,6 +156,21 @@ function App() {
 
   const currentPlan = plans.find(p => p.id === selectedPlanId)
 
+  // Still checking if a session exists
+  if (!authChecked) {
+    return (
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0B1133", color: "#fff", fontFamily: "system-ui" }}>
+        Loading...
+      </div>
+    )
+  }
+
+  // No one logged in — show auth screen
+  if (!currentUserId) {
+    return <AuthScreen onAuthSuccess={(userId) => setCurrentUserId(userId)} />
+  }
+
+  // Logged in but still fetching plans/users
   if (loading || databaseError) {
     return (
       <div style={{
@@ -157,14 +195,14 @@ function App() {
             plans={plans}
             users={users}
             onOpenPlan={handleOpenPlan}
-            currentUserId={CURRENT_USER_ID}
+            currentUserId={currentUserId}
           />
         }
         {screen === "myplans" &&
           <MyPlansScreen
             plans={plans}
             users={users}
-            currentUserId={CURRENT_USER_ID}
+            currentUserId={currentUserId}
             onOpenPlan={handleOpenPlan}
             onAcceptRequest={handleAcceptRequest}
             onDeclineRequest={handleDeclineRequest}
@@ -172,17 +210,18 @@ function App() {
         }
         {screen === "profile" &&
           <ProfileScreen
-            currentUserId={CURRENT_USER_ID}
+            currentUserId={currentUserId}
             plans={plans}
             users={users}
             onUpdateProfile={handleUpdateProfile}
+            onLogout={handleLogout}
           />
         }
         {screen === "planDetail" && currentPlan &&
           <PlanDetailScreen
             plan={currentPlan}
             users={users}
-            currentUserId={CURRENT_USER_ID}
+            currentUserId={currentUserId}
             onBack={handleBack}
             onJoinRequest={handleJoinRequest}
             onCancelRequest={handleCancelRequest}
