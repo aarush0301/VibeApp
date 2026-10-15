@@ -2,6 +2,8 @@
 import { useState } from 'react'
 import { T, getAvatarColor } from '../theme.js'
 import EditProfileModal from './EditProfileModal.jsx'
+import Stars from './Stars.jsx'
+import { getRatingStats, ratingLabel } from '../ratingUtils.js'
 
 function ProfileScreen({ currentUserId, plans, users, onUpdateProfile, onLogout }) {
   const [showEdit, setShowEdit] = useState(false)
@@ -13,6 +15,7 @@ function ProfileScreen({ currentUserId, plans, users, onUpdateProfile, onLogout 
   const plansCreated = plans.filter(p => p.creatorId === currentUserId).length
   const plansJoined  = plans.filter(p => p.memberIds.includes(currentUserId) && p.creatorId !== currentUserId).length
   const initials     = user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
+  const stats = getRatingStats(user.ratings)
 
   return (
     <div style={styles.screen}>
@@ -21,6 +24,19 @@ function ProfileScreen({ currentUserId, plans, users, onUpdateProfile, onLogout 
   <div style={{ ...styles.avatar, background: getAvatarColor(user.name) }}>{initials}</div>
   <h1 style={styles.name}>{user.name}</h1>
   <p style={styles.college}>{user.college}</p>
+
+  <div style={{ marginBottom: 12 }}>
+  {stats ? (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      <Stars score={stats.avg} size={14} />
+      <span style={{ fontSize: 13, fontWeight: "700", color: T.yellow }}>{stats.avg}</span>
+      <span style={{ fontSize: 11, color: T.textMut }}>({stats.count} ratings)</span>
+      <span style={{ fontSize: 10, background: "#2A2008", color: T.yellow, padding: "2px 7px", borderRadius: 10, fontWeight: "600" }}>{ratingLabel(stats.avg)}</span>
+    </span>
+  ) : (
+    <span style={{ fontSize: 12, color: T.textMut }}>No ratings yet</span>
+  )}
+</div>
 
   <button onClick={() => setShowEdit(true)} style={styles.editBtn} className="tap">
     ✏️ Edit Profile
@@ -69,6 +85,24 @@ function ProfileScreen({ currentUserId, plans, users, onUpdateProfile, onLogout 
           </div>
         </div>
       </div>
+
+      {user.ratings?.length > 0 && (
+  <div style={styles.section}>
+    <p style={styles.sectionLabel}>Reviews from past plans</p>
+    {[...user.ratings].reverse().map(r => {
+      const rater = users.find(u => u.id === r.rater_id)
+      return (
+        <div key={r.id} style={{ paddingBottom: 12, marginBottom: 12, borderBottom: `1px solid ${T.border}` }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 4 }}>
+            <Stars score={r.score} size={13} />
+            <span style={{ fontSize: 11, color: T.textMut }}>{rater?.name?.split(" ")[0] || "Someone"}</span>
+          </div>
+          {r.comment && <p style={{ fontSize: 13, color: T.textSec, lineHeight: 1.5 }}>"{r.comment}"</p>}
+        </div>
+      )
+    })}
+  </div>
+)}
 
        <div style={{ padding: "0 16px", marginBottom: 20 }}>
         <button onClick={onLogout} className="tap" style={{ width: "100%", padding: 13, borderRadius: 12, border: "1.5px solid #4A2A1A", background: "transparent", color: "#FF8060", fontSize: 14, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" }}>

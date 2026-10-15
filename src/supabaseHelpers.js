@@ -1,4 +1,4 @@
-import { supabase } from './supabaseClient.js'
+﻿import { supabase } from './supabaseClient.js'
 
 export async function fetchAllData() {
   const results = await Promise.all([
@@ -69,4 +69,13 @@ export async function fetchAllData() {
   }))
 
   return { plans, users }
+}
+
+export async function fetchRatings() {
+  const { data, error } = await supabase
+    .from('ratings')
+    .select('*')
+    .order('created_at')
+  if (error) throw new Error('Could not load ratings: ' + error.message)
+  return data || []
 }

@@ -1,9 +1,11 @@
 
 import { T, getAvatarColor } from '../theme.js'
+import { getRatingStats } from '../ratingUtils.js'
 import PlanCard from './PlanCard.jsx'
 
 function MyPlansScreen({ plans, users, currentUserId, onOpenPlan, onAcceptRequest, onDeclineRequest }) {
-  const getUserById  = id => users.find(u => u.id === id) || { name: "Unknown", college: "" }
+  const getUserById = id => users.find(u => u.id === id) || { name: "Unknown", college: "", year: "" }
+
   const createdPlans = plans.filter(p => p.creatorId === currentUserId)
   const joinedPlans  = plans.filter(p => p.memberIds.includes(currentUserId) && p.creatorId !== currentUserId)
   const totalPending = createdPlans.reduce((total, p) => total + p.requestIds.length, 0)
@@ -24,47 +26,66 @@ function MyPlansScreen({ plans, users, currentUserId, onOpenPlan, onAcceptReques
       {createdPlans.length > 0 && (
         <div style={{ marginBottom: 28 }}>
           <p style={styles.sectionLabel}>Plans you created</p>
-          {createdPlans.map(plan => (
-            <div key={plan.id}>
-              <div onClick={() => onOpenPlan(plan)} style={{ cursor: "pointer" }}>
-                <PlanCard plan={plan} creatorName={getUserById(plan.creatorId)?.name} />
-              </div>
-              {plan.requestIds.length > 0 && (
-                <div style={styles.requestsBox}>
-                  <p style={styles.requestsTitle}>⏳ {plan.requestIds.length} request{plan.requestIds.length !== 1 ? "s" : ""} waiting</p>
-                  {plan.requestIds.map(uid => {
-                    const u = getUserById(uid)
-                    return (
-                      <div key={uid} style={styles.requestRow}>
-                        <div style={{ ...styles.avatar, background: getAvatarColor(u.name) }}>
-                          {u.name.split(" ").map(n => n[0]).join("").slice(0, 2)}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <div style={{ fontSize: 13, fontWeight: "600", color: T.text }}>{u.name}</div>
-                          <div style={{ fontSize: 11, color: T.textMut, marginTop: 2 }}>{u.college} · {u.year} yr</div>
-                        </div>
-                        <div style={{ display: "flex", gap: 6 }}>
-                          <button onClick={() => onAcceptRequest(plan.id, uid)} style={styles.acceptBtn}>✓ Accept</button>
-                          <button onClick={() => onDeclineRequest(plan.id, uid)} style={styles.declineBtn}>✕</button>
-                        </div>
-                      </div>
-                    )
-                  })}
+          {createdPlans.map(plan => {
+            const creator = getUserById(plan.creatorId)
+            return (
+              <div key={plan.id}>
+                <div onClick={() => onOpenPlan(plan)} style={{ cursor: "pointer" }}>
+                  <PlanCard
+                    plan={plan}
+                    creatorName={creator.name}
+                    creatorRating={getRatingStats(creator.ratings)}
+                  />
                 </div>
-              )}
-            </div>
-          ))}
+
+                {plan.requestIds.length > 0 && (
+                  <div style={styles.requestsBox}>
+                    <p style={styles.requestsTitle}>
+                      ⏳ {plan.requestIds.length} request{plan.requestIds.length !== 1 ? "s" : ""} waiting
+                    </p>
+                    {plan.requestIds.map(uid => {
+                      const u = getUserById(uid)
+                      return (
+                        <div key={uid} style={styles.requestRow}>
+                          <div style={{ ...styles.avatar, background: getAvatarColor(u.name) }}>
+                            {u.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <div style={{ fontSize: 13, fontWeight: "600", color: T.text }}>{u.name}</div>
+                            <div style={{ fontSize: 11, color: T.textMut, marginTop: 2 }}>
+                              {u.college}{u.year ? ` · ${u.year} yr` : ""}
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", gap: 6 }}>
+                            <button onClick={() => onAcceptRequest(plan.id, uid)} className="tap" style={styles.acceptBtn}>✓ Accept</button>
+                            <button onClick={() => onDeclineRequest(plan.id, uid)} className="tap" style={styles.declineBtn}>✕</button>
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       )}
 
       {joinedPlans.length > 0 && (
         <div>
           <p style={styles.sectionLabel}>Plans you joined</p>
-          {joinedPlans.map(plan => (
-            <div key={plan.id} onClick={() => onOpenPlan(plan)} style={{ cursor: "pointer" }}>
-              <PlanCard plan={plan} creatorName={getUserById(plan.creatorId)?.name} />
-            </div>
-          ))}
+          {joinedPlans.map(plan => {
+            const creator = getUserById(plan.creatorId)
+            return (
+              <div key={plan.id} onClick={() => onOpenPlan(plan)} style={{ cursor: "pointer" }}>
+                <PlanCard
+                  plan={plan}
+                  creatorName={creator.name}
+                  creatorRating={getRatingStats(creator.ratings)}
+                />
+              </div>
+            )
+          })}
         </div>
       )}
 
@@ -83,10 +104,10 @@ const styles = {
   screen:        { padding: "0 16px 100px", minHeight: "100vh", background: T.bg },
   header:        { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "52px 0 20px" },
   heading:       { fontSize: 24, fontWeight: "800", color: T.text, letterSpacing: -0.5 },
-  pendingBadge:  { background: "#2A2008", color: T.yellow, fontSize: 12, fontWeight: "700", padding: "4px 12px", borderRadius: 20, border: `1px solid #4A3800` },
-  pendingBanner: { background: "#2A2008", border: `1px solid #4A3800`, borderRadius: 12, padding: "12px 16px", fontSize: 14, fontWeight: "500", color: T.yellow, marginBottom: 20 },
+  pendingBadge:  { background: "#2A2008", color: T.yellow, fontSize: 12, fontWeight: "700", padding: "4px 12px", borderRadius: 20, border: "1px solid #4A3800" },
+  pendingBanner: { background: "#2A2008", border: "1px solid #4A3800", borderRadius: 12, padding: "12px 16px", fontSize: 14, fontWeight: "500", color: T.yellow, marginBottom: 20 },
   sectionLabel:  { fontSize: 12, fontWeight: "700", color: T.textMut, textTransform: "uppercase", letterSpacing: "0.6px", margin: "0 0 10px" },
-  requestsBox:   { background: "#2A2008", border: `1px solid #4A3800`, borderRadius: 12, padding: "12px 14px", marginTop: -8, marginBottom: 14 },
+  requestsBox:   { background: "#2A2008", border: "1px solid #4A3800", borderRadius: 12, padding: "12px 14px", marginTop: -8, marginBottom: 14 },
   requestsTitle: { fontSize: 13, fontWeight: "600", color: T.yellow, margin: "0 0 10px" },
   requestRow:    { display: "flex", alignItems: "center", gap: 10, marginBottom: 10 },
   avatar:        { width: 36, height: 36, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: 12, flexShrink: 0 },

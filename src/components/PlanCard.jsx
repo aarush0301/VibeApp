@@ -1,6 +1,7 @@
-import { T, TYPE_CONFIG, getAvatarColor, formatDate } from '../theme.js'
+﻿import { T, TYPE_CONFIG, getAvatarColor, formatDate } from '../theme.js'
+import Stars from './Stars.jsx'
 
-function PlanCard({ plan, creatorName, distance }) {
+function PlanCard({ plan, creatorName, distance, creatorRating }) {
   const config    = TYPE_CONFIG[plan.type] || TYPE_CONFIG.Other
   const spotsLeft = plan.maxMembers - plan.memberIds.length
   const initials  = creatorName
@@ -36,7 +37,25 @@ function PlanCard({ plan, creatorName, distance }) {
           <div style={{ ...styles.avatar, background: getAvatarColor(creatorName || "x") }}>
             {initials}
           </div>
-          <span style={styles.creatorName}>{creatorName || "Unknown"}</span>
+          <div>
+            <div>
+  <span style={styles.creatorName}>{creatorName || "Unknown"}</span>
+  <div style={{ marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+    {creatorRating ? (
+      <>
+        <Stars score={creatorRating.avg} size={10} />
+        <span style={{ fontSize: 10, color: T.yellow, fontWeight: "700" }}>{creatorRating.avg}</span>
+        <span style={{ fontSize: 10, color: T.textMut }}>({creatorRating.count})</span>
+      </>
+    ) : (
+      <span style={{ fontSize: 10, color: T.textMut }}>No ratings yet</span>
+    )}
+  </div>
+</div>
+            <div style={{ marginTop: 2, display: "flex", alignItems: "center", gap: 4 }}>
+              {creatorRating ? <><Stars score={creatorRating.avg} size={10} /><span style={{ fontSize: 10, color: T.yellow, fontWeight: "700" }}>{creatorRating.avg}</span><span style={{ fontSize: 10, color: T.textMut }}>({creatorRating.count})</span></> : <span style={{ fontSize: 10, color: T.textMut }}>No ratings yet</span>}
+            </div>
+          </div>
         </div>
         <div style={{
           ...styles.spots,

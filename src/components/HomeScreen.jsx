@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react'
+﻿import { useState, useEffect } from 'react'
+import { getRatingStats } from '../ratingUtils.js'
 import { T, getAvatarColor } from '../theme.js'
 import { getDistanceKm, getUserLocation } from '../locationUtils.js'
 import PlanCard from './PlanCard.jsx'
@@ -147,7 +148,7 @@ function HomeScreen({ plans, users, onOpenPlan, currentUserId }) {
             const creator = getUserById(plan.creatorId)
             return (
               <div key={plan.id} onClick={() => onOpenPlan(plan)} style={{ cursor: "pointer" }} className="fade-in">
-                <PlanCard plan={plan} creatorName={creator?.name || "Unknown"} distance={plan.distance} />
+                <PlanCard plan={plan} creatorName={creator?.name || "Unknown"} distance={plan.distance} creatorRating={getRatingStats(creator?.ratings)} />
               </div>
             )
           })

@@ -1,7 +1,7 @@
-
+﻿
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient.js'
-import { fetchAllData } from './supabaseHelpers.js'
+import { fetchAllData, fetchRatings } from './supabaseHelpers.js'
 import HomeScreen        from './components/HomeScreen.jsx'
 import MyPlansScreen     from './components/MyPlansScreen.jsx'
 import ProfileScreen     from './components/ProfileScreen.jsx'
@@ -20,6 +20,7 @@ function App() {
   const [databaseError, setDatabaseError]     = useState(null)
   const [currentUserId, setCurrentUserId]     = useState(null)
   const [authChecked, setAuthChecked]         = useState(false)
+  const [ratings, setRatings] = useState([])
 
   // ── Load everything from Supabase ─────────────────────────────────────────
   const loadData = async () => {
@@ -27,8 +28,10 @@ function App() {
     setDatabaseError(null)
     try {
       const { plans: loadedPlans, users: loadedUsers } = await fetchAllData()
+      const loadedRatings = await fetchRatings()
       setPlans(loadedPlans)
       setUsers(loadedUsers)
+      setRatings(loadedRatings)
     } catch (error) {
       console.error('Supabase load failed:', error)
       setDatabaseError(error.message || 'Could not connect to the database.')
@@ -110,6 +113,22 @@ function App() {
     await loadData()
   }
 
+  const handleRateHost = async (planId, hostId, score, comment) => {
+    const { error } = await supabase.from('ratings').insert({
+      plan_id: planId,
+      host_id: hostId,
+      rater_id: currentUserId,
+      score,
+      comment: comment || null,
+    })
+    if (error) {
+      alert(error.code === '23505' ? "You've already rated this plan." : "Couldn't submit rating: " + error.message)
+      return false
+    }
+    await loadData()
+    return true
+  }
+
   const handleUpdateProfile = async (updatedData) => {
     await supabase
       .from('users')
@@ -155,6 +174,10 @@ function App() {
   }
 
   const currentPlan = plans.find(p => p.id === selectedPlanId)
+  const usersWithRatings = users.map(user => ({
+    ...user,
+    ratings: ratings.filter(rating => rating.host_id === user.id),
+  }))
 
   // Still checking if a session exists
   if (!authChecked) {
@@ -193,7 +216,7 @@ function App() {
         {screen === "home" &&
           <HomeScreen
             plans={plans}
-            users={users}
+            users={usersWithRatings}
             onOpenPlan={handleOpenPlan}
             currentUserId={currentUserId}
           />
@@ -201,7 +224,7 @@ function App() {
         {screen === "myplans" &&
           <MyPlansScreen
             plans={plans}
-            users={users}
+            users={usersWithRatings}
             currentUserId={currentUserId}
             onOpenPlan={handleOpenPlan}
             onAcceptRequest={handleAcceptRequest}
@@ -212,7 +235,7 @@ function App() {
           <ProfileScreen
             currentUserId={currentUserId}
             plans={plans}
-            users={users}
+            users={usersWithRatings}
             onUpdateProfile={handleUpdateProfile}
             onLogout={handleLogout}
           />
@@ -220,7 +243,7 @@ function App() {
         {screen === "planDetail" && currentPlan &&
           <PlanDetailScreen
             plan={currentPlan}
-            users={users}
+            users={usersWithRatings}
             currentUserId={currentUserId}
             onBack={handleBack}
             onJoinRequest={handleJoinRequest}
@@ -229,6 +252,7 @@ function App() {
             onSendMessage={handleSendMessage}
             onAcceptRequest={handleAcceptRequest}
             onDeclineRequest={handleDeclineRequest}
+            onRateHost={handleRateHost}
           />
         }
       </div>

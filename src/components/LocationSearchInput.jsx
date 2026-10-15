@@ -1,12 +1,24 @@
 import { useState, useEffect, useRef } from 'react'
 import { T } from '../theme.js'
 
+function buildLabel(p) {
+  const main  = p.name || p.street || p.city || p.state || p.country || "Unknown place"
+  const extra = [p.district, p.city, p.state].filter(part => part && part !== main)
+  return [main, ...extra.slice(0, 2)].join(", ")
+}
+
+function buildSubtitle(p) {
+  return [p.street, p.district, p.city, p.state, p.country].filter(Boolean).join(", ")
+}
+
 function LocationSearchInput({ value, onChange }) {
   const [query, setQuery]               = useState(value || "")
   const [suggestions, setSuggestions]   = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [loading, setLoading]           = useState(false)
+  const [searched, setSearched]         = useState(false)
   const wrapperRef = useRef(null)
+  const skipSearch = useRef(false)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -19,45 +31,77 @@ function LocationSearchInput({ value, onChange }) {
     return () => document.removeEventListener("mousedown", handleClickOutside)
   }, [])
 
-  // Debounced search
+  // Debounced search that cancels outdated requests
   useEffect(() => {
-    if (query.trim().length < 3) {
-      setSuggestions([])
+    if (skipSearch.current) {
+      skipSearch.current = false
       return
     }
 
+    const q = query.trim()
+    if (q.length < 2) {
+      return
+    }
+
+    const controller = new AbortController()
     const timer = setTimeout(async () => {
       setLoading(true)
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=6&q=${encodeURIComponent(query)}`
+          `https://photon.komoot.io/api/?q=${encodeURIComponent(q)}&limit=8&lang=en`,
+          { signal: controller.signal }
         )
         const data = await res.json()
-        setSuggestions(data)
-      } catch {
+
+        const seen = new Set()
+        const results = (data.features || [])
+          .map(f => ({
+            label:    buildLabel(f.properties),
+            subtitle: buildSubtitle(f.properties),
+            lat:      f.geometry.coordinates[1],
+            lng:      f.geometry.coordinates[0],
+          }))
+          .filter(r => {
+            const key = r.label + r.subtitle
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+          })
+
+        setSuggestions(results)
+        setSearched(true)
+      } catch (err) {
+        if (err.name === "AbortError") return
         setSuggestions([])
+        setSearched(true)
       }
       setLoading(false)
-    }, 400)
+    }, 250)
 
-    return () => clearTimeout(timer)
+    return () => {
+      clearTimeout(timer)
+      controller.abort()
+    }
   }, [query])
 
   const handleTyping = (text) => {
     setQuery(text)
-    onChange(text) // keep parent form updated even before a suggestion is picked
+    if (text.trim().length < 2) {
+      setSuggestions([])
+      setSearched(false)
+    }
+    onChange(text, null, null) // typed text has no coordinates until a suggestion is picked
     setShowDropdown(true)
   }
 
   const selectSuggestion = (place) => {
-  const parts = place.display_name.split(",").map(p => p.trim())
-  const label = parts.slice(0, 2).join(", ")
+    skipSearch.current = true
+    setQuery(place.label)
+    onChange(place.label, place.lat, place.lng)
+    setSuggestions([])
+    setShowDropdown(false)
+  }
 
-  setQuery(label)
-  onChange(label, parseFloat(place.lat), parseFloat(place.lon))
-  setSuggestions([])
-  setShowDropdown(false)
-}
   return (
     <div ref={wrapperRef} style={{ position: "relative" }}>
       <input
@@ -68,32 +112,33 @@ function LocationSearchInput({ value, onChange }) {
         style={styles.input}
       />
 
-      {loading && (
-        <div style={styles.loadingText}>Searching...</div>
-      )}
+      {loading && <div style={styles.hint}>Searching...</div>}
 
       {showDropdown && suggestions.length > 0 && (
         <div style={styles.dropdown}>
           {suggestions.map((place, i) => (
-            <div
-              key={i}
-              onClick={() => selectSuggestion(place)}
-              style={styles.suggestionItem}
-            >
-              📍 {place.display_name}
+            <div key={i} onClick={() => selectSuggestion(place)} style={styles.item}>
+              <div style={{ fontSize: 14, color: T.text, fontWeight: "600" }}>📍 {place.label}</div>
+              {place.subtitle && (
+                <div style={{ fontSize: 12, color: T.textMut, marginTop: 2 }}>{place.subtitle}</div>
+              )}
             </div>
           ))}
         </div>
+      )}
+
+      {showDropdown && searched && !loading && suggestions.length === 0 && (
+        <div style={styles.hint}>No places found. Try a different spelling.</div>
       )}
     </div>
   )
 }
 
 const styles = {
-  input:           { width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, background: T.muted, fontSize: 14, fontFamily: "inherit", outline: "none", color: T.text, marginBottom: 4 },
-  loadingText:     { fontSize: 12, color: T.textMut, padding: "4px 2px", marginBottom: 12 },
-  dropdown:        { position: "absolute", top: "100%", left: 0, right: 0, background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, marginTop: 4, maxHeight: 220, overflowY: "auto", zIndex: 20, boxShadow: "0 8px 24px rgba(0,0,0,0.5)" },
-  suggestionItem:  { padding: "10px 14px", fontSize: 13, color: T.textSec, cursor: "pointer", borderBottom: `1px solid ${T.border}` },
+  input:    { width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, background: T.muted, fontSize: 14, fontFamily: "inherit", outline: "none", color: T.text, marginBottom: 4 },
+  hint:     { fontSize: 12, color: T.textMut, padding: "4px 2px", marginBottom: 12 },
+  dropdown: { position: "absolute", top: "100%", left: 0, right: 0, background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, marginTop: 4, maxHeight: 260, overflowY: "auto", zIndex: 20, boxShadow: "0 8px 24px rgba(0,0,0,0.5)" },
+  item:     { padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${T.border}` },
 }
 
 export default LocationSearchInput
