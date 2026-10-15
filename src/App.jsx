@@ -1,7 +1,7 @@
 ﻿
 import { useState, useEffect } from 'react'
 import { supabase } from './supabaseClient.js'
-import { fetchAllData, fetchRatings } from './supabaseHelpers.js'
+import { fetchAllData, fetchRatings, fetchFriendships } from './supabaseHelpers.js'
 import HomeScreen        from './components/HomeScreen.jsx'
 import MyPlansScreen     from './components/MyPlansScreen.jsx'
 import ProfileScreen     from './components/ProfileScreen.jsx'
@@ -9,6 +9,7 @@ import PlanDetailScreen  from './components/PlanDetailScreen.jsx'
 import BottomNav         from './components/BottomNav.jsx'
 import CreatePlanModal   from './components/CreatePlanModal.jsx'
 import AuthScreen        from './components/AuthScreen.jsx'
+
 
 function App() {
   const [screen, setScreen]                   = useState("home")
@@ -21,12 +22,15 @@ function App() {
   const [currentUserId, setCurrentUserId]     = useState(null)
   const [authChecked, setAuthChecked]         = useState(false)
   const [ratings, setRatings] = useState([])
+  const [friendships, setFriendships] = useState([])
 
   // ── Load everything from Supabase ─────────────────────────────────────────
   const loadData = async () => {
     setLoading(true)
     setDatabaseError(null)
     try {
+      const loadedFriendships = await fetchFriendships()
+      setFriendships(loadedFriendships)
       const { plans: loadedPlans, users: loadedUsers } = await fetchAllData()
       const loadedRatings = await fetchRatings()
       setPlans(loadedPlans)
@@ -55,7 +59,8 @@ function App() {
   // Once we know who's logged in, load their data
   useEffect(() => {
     if (currentUserId) {
-      loadData()
+      const timeoutId = setTimeout(loadData, 0)
+      return () => clearTimeout(timeoutId)
     }
   }, [currentUserId])
 
@@ -74,6 +79,8 @@ function App() {
     setCurrentUserId(null)
     setPlans([])
     setUsers([])
+    setFriendships([])
+    setRatings([])
     setScreen("home")
   }
 
@@ -113,6 +120,44 @@ function App() {
     await loadData()
   }
 
+const handleSendFriendRequest = async (otherId) => {
+  const { error } = await supabase
+    .from('friendships')
+    .insert({ requester_id: currentUserId, addressee_id: otherId })
+  if (error) {
+    alert(error.code === '23505'
+      ? "A request already exists between you two."
+      : "Couldn't send request: " + error.message)
+    return
+  }
+  await loadData(true)
+}
+
+const handleAcceptFriend = async (friendshipId) => {
+  const { error } = await supabase
+    .from('friendships')
+    .update({ status: 'accepted' })
+    .eq('id', friendshipId)
+  if (error) { alert("Couldn't accept: " + error.message); return }
+  await loadData(true)
+}
+
+const handleRemoveFriendship = async (friendshipId) => {
+  const { error } = await supabase.from('friendships').delete().eq('id', friendshipId)
+  if (error) { alert("Couldn't remove: " + error.message); return }
+  await loadData(true)
+}
+
+const handleToggleEditor = async (planId, userId, value) => {
+  const { error } = await supabase
+    .from('plan_members')
+    .update({ can_edit: value })
+    .eq('plan_id', planId)
+    .eq('user_id', userId)
+  if (error) { alert("Couldn't update permission: " + error.message); return }
+  await loadData(true)
+}
+
   const handleRateHost = async (planId, hostId, score, comment) => {
     const { error } = await supabase.from('ratings').insert({
       plan_id: planId,
@@ -128,6 +173,33 @@ function App() {
     await loadData()
     return true
   }
+
+  const handleUpdateItineraryItem = async (itemId, fields) => {
+  const { data, error } = await supabase
+    .from('itinerary_items')
+    .update({ time: fields.time, activity: fields.activity, note: fields.note })
+    .eq('id', itemId)
+    .select()
+  if (error || !data || data.length === 0) {
+    alert("Couldn't update this item" + (error ? ": " + error.message : ". You may not have permission."))
+    return false
+  }
+  await loadData(true)
+  return true
+}
+
+const handleDeleteItineraryItem = async (itemId) => {
+  const { data, error } = await supabase
+    .from('itinerary_items')
+    .delete()
+    .eq('id', itemId)
+    .select()
+  if (error || !data || data.length === 0) {
+    alert("Couldn't delete this item" + (error ? ": " + error.message : ". You may not have permission."))
+    return
+  }
+  await loadData(true)
+}
 
   const handleUpdateProfile = async (updatedData) => {
     await supabase
@@ -231,13 +303,18 @@ function App() {
             onDeclineRequest={handleDeclineRequest}
           />
         }
+        
         {screen === "profile" &&
           <ProfileScreen
             currentUserId={currentUserId}
             plans={plans}
             users={usersWithRatings}
+            friendships={friendships}
             onUpdateProfile={handleUpdateProfile}
             onLogout={handleLogout}
+            onSendFriendRequest={handleSendFriendRequest}
+            onAcceptFriend={handleAcceptFriend}
+            onRemoveFriendship={handleRemoveFriendship}
           />
         }
         {screen === "planDetail" && currentPlan &&
@@ -253,6 +330,9 @@ function App() {
             onAcceptRequest={handleAcceptRequest}
             onDeclineRequest={handleDeclineRequest}
             onRateHost={handleRateHost}
+            onToggleEditor={handleToggleEditor}
+            onUpdateItineraryItem={handleUpdateItineraryItem}
+            onDeleteItineraryItem={handleDeleteItineraryItem}
           />
         }
       </div>

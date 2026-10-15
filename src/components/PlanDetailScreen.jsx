@@ -10,7 +10,7 @@ function PlanDetailScreen({
   onJoinRequest, onCancelRequest,
   onAddItineraryItem, onSendMessage,
   onAcceptRequest, onDeclineRequest,
-  onRateHost,
+  onRateHost, onToggleEditor, onUpdateItineraryItem, onDeleteItineraryItem
 }) {
   const [activeTab, setActiveTab]             = useState("info")
   const [newItemTime, setNewItemTime]         = useState("")
@@ -20,6 +20,10 @@ function PlanDetailScreen({
   const [chatInput, setChatInput]             = useState("")
   const [showAI, setShowAI]                   = useState(false)
   const [showRate, setShowRate]               = useState(false)
+  const [editingId, setEditingId]             = useState(null)
+  const [editTime, setEditTime]               = useState("")
+  const [editActivity, setEditActivity]       = useState("")
+  const [editNote, setEditNote]               = useState("")
 
   const getUserById = id =>
     users.find(u => u.id === id) || { id, name: "Unknown", college: "", year: "", vibes: [], ratings: [] }
@@ -37,8 +41,8 @@ function PlanDetailScreen({
 
   const canEditItinerary =
     isCreator ||
-    plan.itineraryPermission === "all" ||
-    (plan.itineraryPermission === "select" && plan.selectMembers?.includes(currentUserId))
+    (isMember && plan.itineraryPermission === "all") ||
+    (isMember && plan.itineraryPermission === "select" && plan.selectMembers?.includes(currentUserId))
 
   const handleAddItem = () => {
     if (!newItemTime || !newItemActivity) return
@@ -53,6 +57,29 @@ function PlanDetailScreen({
     setNewItemNote("")
     setShowAddItem(false)
   }
+
+const startEdit = (item) => {
+  setEditingId(item.id)
+  setEditTime(item.time || "")
+  setEditActivity(item.activity || "")
+  setEditNote(item.note || "")
+}
+
+const saveEdit = async () => {
+  if (!editTime.trim() || !editActivity.trim()) return
+  const ok = await onUpdateItineraryItem(editingId, {
+    time: editTime.trim(),
+    activity: editActivity.trim(),
+    note: editNote.trim(),
+  })
+  if (ok) setEditingId(null)
+}
+
+const handleDelete = (item) => {
+  if (window.confirm(`Delete "${item.activity}" from the itinerary?`)) {
+    onDeleteItineraryItem(item.id)
+  }
+}
 
   const handleSendMessage = () => {
     if (!chatInput.trim()) return
@@ -84,7 +111,7 @@ function PlanDetailScreen({
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: config.dot, display: "inline-block" }} />
             {plan.type}
           </span>
-          <span style={{ fontSize: 12, color: T.textMut }}>{plan.isPublic ? "🌍 Public" : "🔒 Private"}</span>
+          <span style={{ fontSize: 12, color: T.textMut }}>{plan.isPublic ? "🌍 Public" : "🔒 Friends only"}</span>
         </div>
         <h1 style={{ fontSize: 22, fontWeight: "800", color: T.text, marginBottom: 10, letterSpacing: -0.3 }}>{plan.title}</h1>
         <div style={{ display: "flex", gap: 6, flexWrap: "wrap" }}>
@@ -123,10 +150,10 @@ function PlanDetailScreen({
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
               {[
-                ["Type",       plan.type,                                      config.bg,                                   config.color],
-                ["Members",    `${plan.memberIds.length}/${plan.maxMembers}`,  "#1A1840",                                   "#A09EFF"],
-                ["Spots Left", spotsLeft,                                      spotsLeft <= 2 ? "#2D1810" : "#0D2820",      spotsLeft <= 2 ? "#FF8060" : "#50D4A0"],
-                ["Visibility", plan.isPublic ? "Public 🌍" : "Private 🔒",     T.muted,                                     T.textSec],
+                ["Type",       plan.type,                                         config.bg,                              config.color],
+                ["Members",    `${plan.memberIds.length}/${plan.maxMembers}`,     "#1A1840",                              "#A09EFF"],
+                ["Spots Left", spotsLeft,                                         spotsLeft <= 2 ? "#2D1810" : "#0D2820", spotsLeft <= 2 ? "#FF8060" : "#50D4A0"],
+                ["Visibility", plan.isPublic ? "Public 🌍" : "Friends only 🔒",   T.muted,                                T.textSec],
               ].map(([label, value, bg, color]) => (
                 <div key={label} style={{ background: bg, borderRadius: 12, padding: 12 }}>
                   <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4, color }}>{label}</div>
@@ -200,14 +227,15 @@ function PlanDetailScreen({
             </p>
 
             {plan.memberIds.map(uid => {
-              const u     = getUserById(uid)
-              const stats = getRatingStats(u.ratings)
+              const u        = getUserById(uid)
+              const stats    = getRatingStats(u.ratings)
+              const canEdit  = plan.selectMembers?.includes(uid)
               return (
                 <div key={uid} style={{ display: "flex", alignItems: "center", gap: 12, paddingBottom: 14, marginBottom: 14, borderBottom: `1px solid ${T.border}` }}>
                   <div style={{ ...styles.memberAvatar, background: getAvatarColor(u.name) }}>
                     {u.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: "600", color: T.text, display: "flex", alignItems: "center", gap: 6 }}>
                       {u.name}
                       {uid === plan.creatorId && (
@@ -234,6 +262,22 @@ function PlanDetailScreen({
                       ))}
                     </div>
                   </div>
+
+                  {/* Creator toggles who can edit the itinerary (select-members mode only) */}
+                  {isCreator && plan.itineraryPermission === "select" && uid !== plan.creatorId && (
+                    <button
+                      onClick={() => onToggleEditor(plan.id, uid, !canEdit)}
+                      className="tap"
+                      style={{
+                        flexShrink: 0, padding: "6px 10px", borderRadius: 10, fontSize: 11, fontWeight: "600", fontFamily: "inherit", cursor: "pointer",
+                        background: canEdit ? "#0D2820" : "transparent",
+                        color:      canEdit ? "#50D4A0" : T.textMut,
+                        border:     `1px solid ${canEdit ? "#1A4535" : T.chip}`,
+                      }}
+                    >
+                      {canEdit ? "✏️ Can edit" : "Can't edit"}
+                    </button>
+                  )}
                 </div>
               )
             })}
@@ -269,6 +313,7 @@ function PlanDetailScreen({
         )}
 
         {/* ═════ ITINERARY ═════ */}
+               
         {activeTab === "itinerary" && (
           <div>
             <p style={{ fontSize: 12, color: T.textMut, marginBottom: 16, fontStyle: "italic" }}>
@@ -276,7 +321,7 @@ function PlanDetailScreen({
                 ? "✏️ All members can edit"
                 : plan.itineraryPermission === "creator"
                 ? "🔒 Only the creator can edit"
-                : "👥 Select members can edit"}
+                : "👥 Members picked by the creator can edit"}
             </p>
 
             {plan.itinerary.length === 0 ? (
@@ -284,19 +329,39 @@ function PlanDetailScreen({
                 {canEditItinerary ? "No items yet. Add the first one! 👇" : "No itinerary items yet."}
               </div>
             ) : plan.itinerary.map((item, index) => (
-              <div key={item.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 8 }}>
-                <div style={{ width: 75, display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0, paddingTop: 2 }}>
-                  <span style={{ fontSize: 12, fontWeight: "600", color: T.orange, whiteSpace: "nowrap" }}>{item.time}</span>
-                  {index < plan.itinerary.length - 1 && (
-                    <div style={{ width: 1, flex: 1, background: T.border, marginTop: 6, minHeight: 24 }} />
+              editingId === item.id ? (
+                /* ── Editing this item ── */
+                <div key={item.id} style={{ background: T.card, borderRadius: 12, padding: 14, display: "flex", flexDirection: "column", gap: 8, border: `1px solid ${T.orange}`, marginBottom: 12 }}>
+                  <input value={editTime}     onChange={e => setEditTime(e.target.value)}     placeholder="Time" style={styles.input} />
+                  <input value={editActivity} onChange={e => setEditActivity(e.target.value)} placeholder="Activity *" style={styles.input} />
+                  <input value={editNote}     onChange={e => setEditNote(e.target.value)}     placeholder="Note (optional)" style={styles.input} />
+                  <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
+                    <button onClick={saveEdit} className="tap" style={styles.joinBtn}>Save</button>
+                    <button onClick={() => setEditingId(null)} className="tap" style={{ ...styles.cancelBtn, marginTop: 0 }}>Cancel</button>
+                  </div>
+                </div>
+              ) : (
+                /* ── Normal row ── */
+                <div key={item.id} style={{ display: "flex", alignItems: "flex-start", gap: 12, marginBottom: 8 }}>
+                  <div style={{ width: 75, display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0, paddingTop: 2 }}>
+                    <span style={{ fontSize: 12, fontWeight: "600", color: T.orange, whiteSpace: "nowrap" }}>{item.time}</span>
+                    {index < plan.itinerary.length - 1 && (
+                      <div style={{ width: 1, flex: 1, background: T.border, marginTop: 6, minHeight: 24 }} />
+                    )}
+                  </div>
+                  <div style={{ width: 10, height: 10, borderRadius: "50%", background: T.orange, flexShrink: 0, marginTop: 4 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontSize: 14, fontWeight: "500", color: T.text }}>{item.activity}</div>
+                    {item.note && <div style={{ fontSize: 12, color: T.textMut, marginTop: 2 }}>{item.note}</div>}
+                  </div>
+                  {canEditItinerary && (
+                    <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+                      <button onClick={() => startEdit(item)} className="tap" style={styles.iconBtn} aria-label="Edit item">✏️</button>
+                      <button onClick={() => handleDelete(item)} className="tap" style={styles.iconBtn} aria-label="Delete item">🗑️</button>
+                    </div>
                   )}
                 </div>
-                <div style={{ width: 10, height: 10, borderRadius: "50%", background: T.orange, flexShrink: 0, marginTop: 4 }} />
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 14, fontWeight: "500", color: T.text }}>{item.activity}</div>
-                  {item.note && <div style={{ fontSize: 12, color: T.textMut, marginTop: 2 }}>{item.note}</div>}
-                </div>
-              </div>
+              )
             ))}
 
             {canEditItinerary && (
@@ -404,6 +469,7 @@ const styles = {
   cancelBtn:    { width: "100%", padding: 13, borderRadius: 12, border: `1.5px solid ${T.chip}`, background: "transparent", color: T.textSec, fontSize: 14, fontWeight: "600", fontFamily: "inherit", cursor: "pointer", marginTop: 8 },
   memberAvatar: { width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: 13, flexShrink: 0 },
   input:        { padding: "10px 14px", borderRadius: 10, border: `1px solid ${T.border}`, background: T.muted, fontSize: 14, fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box", color: T.text },
+  iconBtn: { background: T.muted, border: `1px solid ${T.chip}`, borderRadius: 8, width: 30, height: 30, fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
 }
 
 export default PlanDetailScreen

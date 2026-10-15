@@ -40,6 +40,10 @@ export async function fetchAllData() {
       .filter(m => m.plan_id === plan.id)
       .map(m => m.user_id),
 
+    selectMembers: (membersData || [])
+      .filter(m => m.plan_id === plan.id && m.can_edit)
+      .map(m => m.user_id),
+
     requestIds: (requestsData || [])
       .filter(r => r.plan_id === plan.id)
       .map(r => r.user_id),
@@ -77,5 +81,11 @@ export async function fetchRatings() {
     .select('*')
     .order('created_at')
   if (error) throw new Error('Could not load ratings: ' + error.message)
+  return data || []
+}
+
+export async function fetchFriendships() {
+  const { data, error } = await supabase.from('friendships').select('*')
+  if (error) throw new Error('Could not load friendships: ' + error.message)
   return data || []
 }
