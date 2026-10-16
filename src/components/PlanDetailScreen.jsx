@@ -4,6 +4,7 @@ import { getRatingStats, ratingLabel } from '../ratingUtils.js'
 import Stars from './Stars.jsx'
 import RateModal from './RateModal.jsx'
 import AIChatPanel from './AIChatPanel.jsx'
+import { useEffect, useRef } from 'react'
 
 function PlanDetailScreen({
   plan, users, currentUserId, onBack,
@@ -33,6 +34,10 @@ function PlanDetailScreen({
   const isCreator    = plan.creatorId === currentUserId
   const spotsLeft    = plan.maxMembers - plan.memberIds.length
   const config       = TYPE_CONFIG[plan.type] || TYPE_CONFIG.Other
+  const chatEndRef = useRef(null)
+  useEffect(() => {
+  if (activeTab === "chat") chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
+      }, [plan.chat.length, activeTab])
 
   const host      = getUserById(plan.creatorId)
   const hostStats = getRatingStats(host.ratings)
@@ -403,6 +408,7 @@ const handleDelete = (item) => {
                         {sender.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()}
                       </div>
                     )}
+                    <div ref={chatEndRef} />
                     <div style={{ maxWidth: "70%" }}>
                       {!isMe && <div style={{ fontSize: 11, color: T.textMut, marginBottom: 3 }}>{sender.name.split(" ")[0]}</div>}
                       <div style={{

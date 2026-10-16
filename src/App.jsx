@@ -58,11 +58,33 @@ function App() {
 
   // Once we know who's logged in, load their data
   useEffect(() => {
-    if (currentUserId) {
-      const timeoutId = setTimeout(loadData, 0)
-      return () => clearTimeout(timeoutId)
-    }
-  }, [currentUserId])
+  if (!currentUserId) return
+
+  let debounce = null
+  const refresh = () => {
+    clearTimeout(debounce)
+    debounce = setTimeout(() => loadData(true), 300)
+  }
+
+  const channel = supabase.channel('vibe-live')
+  const tables = [
+    'users', 'plans', 'plan_members', 'plan_requests',
+    'itinerary_items', 'messages', 'ratings', 'friendships',
+  ]
+  tables.forEach(table => {
+    channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh)
+  })
+  channel.subscribe()
+
+  // Slow safety-net refresh in case the connection drops
+  const fallback = setInterval(() => loadData(true), 60000)
+
+  return () => {
+    clearTimeout(debounce)
+    clearInterval(fallback)
+    supabase.removeChannel(channel)
+  }
+}, [currentUserId])
 
   const handleOpenPlan = (plan) => {
     setSelectedPlanId(plan.id)
