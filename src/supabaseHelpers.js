@@ -89,3 +89,13 @@ export async function fetchFriendships() {
   if (error) throw new Error('Could not load friendships: ' + error.message)
   return data || []
 }
+
+export async function fetchNotifications() {
+  const { data, error } = await supabase
+    .from('notifications')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(50)
+  if (error) throw new Error('Could not load notifications: ' + error.message)
+  return data || []
+}

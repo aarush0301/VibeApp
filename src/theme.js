@@ -1,31 +1,37 @@
 export const T = {
-  bg:      "#0B1133",
-  card:    "#1E264A",
-  muted:   "#2A3260",
-  chip:    "#4C547D",
-  text:    "#FFFFFF",
-  textSec: "#B2BAE2",
-  textMut: "#8F94B0",
-  border:  "#2A3260",
-  orange:  "#D85A30",
-  purple:  "#7F77DD",
-  green:   "#1D9E75",
-  yellow:  "#EF9F27",
+  bg:      "#0E0B1A",
+  card:    "#181330",
+  raised:  "#221B3D",
+  muted:   "#221B3D",
+  chip:    "#352C5C",
+  text:    "#F5F3FF",
+  textSec: "#C4BEE0",
+  textMut: "#8A84A8",
+  border:  "rgba(255,255,255,0.07)",
+
+  orange:  "#FF6B4A",
+  purple:  "#8B7CFF",
+  green:   "#34D399",
+  yellow:  "#FBBF24",
+
+  gradient:  "linear-gradient(135deg, #FF6B4A 0%, #FF8E53 100%)",
+  gradientPurple: "linear-gradient(135deg, #8B7CFF 0%, #B06AB3 100%)",
+  cardGradient: "linear-gradient(160deg, #1E1839 0%, #151029 100%)",
+  shadow:  "0 8px 24px rgba(0,0,0,0.35)",
+  glow:    "0 6px 20px rgba(255,107,74,0.4)",
 }
 
 export const TYPE_CONFIG = {
-  Party:        { bg: "#2D1810", color: "#FF8060", border: "#4A2A1A", dot: "#D85A30" },
-  Trip:         { bg: "#0D2820", color: "#50D4A0", border: "#1A4535", dot: "#1D9E75" },
-  Outing:       { bg: "#1A1840", color: "#A09EFF", border: "#2E2A60", dot: "#7F77DD" },
-  "Food Run":   { bg: "#2A2008", color: "#FFD060", border: "#4A3800", dot: "#EF9F27" },
-  Sports:       { bg: "#0D2810", color: "#70E870", border: "#1A4520", dot: "#52B535" },
-  "Study Sesh": { bg: "#0D1828", color: "#70C0FF", border: "#1A3050", dot: "#378ADD" },
-  Other:        { bg: "#1A1C2A", color: "#9898B8", border: "#2A2C40", dot: "#9E9B96" },
+  Party:        { bg: "rgba(255,107,74,0.14)",  color: "#FF8A70", border: "rgba(255,107,74,0.28)",  dot: "#FF6B4A" },
+  Trip:         { bg: "rgba(52,211,153,0.14)",  color: "#5EE0B0", border: "rgba(52,211,153,0.28)",  dot: "#34D399" },
+  Outing:       { bg: "rgba(139,124,255,0.16)", color: "#B4A9FF", border: "rgba(139,124,255,0.3)",  dot: "#8B7CFF" },
+  "Food Run":   { bg: "rgba(251,191,36,0.14)",  color: "#FBBF24", border: "rgba(251,191,36,0.28)",  dot: "#FBBF24" },
+  Sports:       { bg: "rgba(56,189,248,0.14)",  color: "#7DD3FC", border: "rgba(56,189,248,0.28)",  dot: "#38BDF8" },
+  "Study Sesh": { bg: "rgba(244,114,182,0.14)", color: "#F9A8D4", border: "rgba(244,114,182,0.28)", dot: "#F472B6" },
+  Other:        { bg: "rgba(196,190,224,0.10)", color: "#C4BEE0", border: "rgba(196,190,224,0.2)",  dot: "#8A84A8" },
 }
 
-export const AVATAR_COLORS = [
-  "#7F77DD", "#D85A30", "#1D9E75", "#EF9F27", "#D4537E", "#378ADD"
-]
+export const AVATAR_COLORS = ["#8B7CFF", "#FF6B4A", "#34D399", "#FBBF24", "#F472B6", "#38BDF8"]
 
 export function getAvatarColor(str) {
   if (!str) return AVATAR_COLORS[0]

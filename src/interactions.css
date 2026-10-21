@@ -10,8 +10,12 @@
 
 /* Cards — lift on hover (desktop), press down on tap (mobile) */
 .card-tap {
-  transition: transform 0.2s cubic-bezier(0.16,1,0.3,1), box-shadow 0.2s ease, border-color 0.2s ease;
-  -webkit-tap-highlight-color: transparent;
+  @media (hover: hover) {
+  .card-tap:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 34px rgba(0,0,0,0.5);
+  }
+};
 }
 .card-tap:active {
   transform: scale(0.98);

@@ -1,14 +1,16 @@
 ﻿
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { supabase } from './supabaseClient.js'
-import { fetchAllData, fetchRatings, fetchFriendships } from './supabaseHelpers.js'
 import HomeScreen        from './components/HomeScreen.jsx'
+import UserProfileModal from './components/UserProfileModal.jsx'
 import MyPlansScreen     from './components/MyPlansScreen.jsx'
 import ProfileScreen     from './components/ProfileScreen.jsx'
 import PlanDetailScreen  from './components/PlanDetailScreen.jsx'
 import BottomNav         from './components/BottomNav.jsx'
 import CreatePlanModal   from './components/CreatePlanModal.jsx'
 import AuthScreen        from './components/AuthScreen.jsx'
+import { fetchAllData, fetchRatings, fetchFriendships, fetchNotifications } from './supabaseHelpers.js'
+import NotificationsModal from './components/NotificationsModal.jsx'
 
 
 function App() {
@@ -23,26 +25,44 @@ function App() {
   const [authChecked, setAuthChecked]         = useState(false)
   const [ratings, setRatings] = useState([])
   const [friendships, setFriendships] = useState([])
-
+  const hasLoaded  = useRef(false)
+  const loadingNow = useRef(false)
+  const loadQueued = useRef(false)
+  const [notifications, setNotifications]         = useState([])
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [viewingUserId, setViewingUserId] = useState(null)
   // ── Load everything from Supabase ─────────────────────────────────────────
   const loadData = async () => {
-    setLoading(true)
-    setDatabaseError(null)
-    try {
-      const loadedFriendships = await fetchFriendships()
-      setFriendships(loadedFriendships)
-      const { plans: loadedPlans, users: loadedUsers } = await fetchAllData()
-      const loadedRatings = await fetchRatings()
-      setPlans(loadedPlans)
-      setUsers(loadedUsers)
-      setRatings(loadedRatings)
-    } catch (error) {
-      console.error('Supabase load failed:', error)
-      setDatabaseError(error.message || 'Could not connect to the database.')
-    } finally {
-      setLoading(false)
-    }
+  // Never run two loads at once. A change that arrives mid-load triggers one more load afterwards.
+  if (loadingNow.current) {
+    if (hasLoaded.current) loadQueued.current = true
+    return
   }
+  loadingNow.current = true
+
+  // Only the very first load may show the full-screen loading state.
+  const isFirstLoad = !hasLoaded.current
+  if (isFirstLoad) { setLoading(true); setDatabaseError(null) }
+
+  try {
+    const [core, loadedRatings, loadedFriendships, loadedNotifications] = await Promise.all([
+  fetchAllData(), fetchRatings(), fetchFriendships(), fetchNotifications(),
+])
+setPlans(core.plans)
+setUsers(core.users)
+setRatings(loadedRatings)
+setFriendships(loadedFriendships)
+setNotifications(loadedNotifications)
+hasLoaded.current = true
+  } catch (error) {
+    console.error('Supabase load failed:', error)
+    if (isFirstLoad) setDatabaseError(error.message || 'Could not connect to the database.')
+  } finally {
+    if (isFirstLoad) setLoading(false)
+    loadingNow.current = false
+    if (loadQueued.current) { loadQueued.current = false; loadData() }
+  }
+}
 
   // Check if a session already exists (so refreshing doesn't log you out)
   useEffect(() => {
@@ -69,7 +89,7 @@ function App() {
   const channel = supabase.channel('vibe-live')
   const tables = [
     'users', 'plans', 'plan_members', 'plan_requests',
-    'itinerary_items', 'messages', 'ratings', 'friendships',
+    'itinerary_items', 'messages', 'ratings', 'friendships','notifications'
   ]
   tables.forEach(table => {
     channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh)
@@ -96,6 +116,15 @@ function App() {
     setScreen("home")
   }
 
+  const handleOpenUserProfile = (id) => {
+  if (id === currentUserId) {
+    setSelectedPlanId(null)
+    setScreen("profile")
+    return
+  }
+  setViewingUserId(id)
+}
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     setCurrentUserId(null)
@@ -104,6 +133,11 @@ function App() {
     setFriendships([])
     setRatings([])
     setScreen("home")
+    hasLoaded.current = false
+    setLoading(true)
+    setNotifications([])
+    setShowNotifications(false)
+    setViewingUserId(null)
   }
 
   // ── Join request ───────────────────────────────────────────────────────────
@@ -196,6 +230,33 @@ const handleToggleEditor = async (planId, userId, value) => {
     return true
   }
 
+  const handleCancelPlan = async (planId, note) => {
+  const { error } = await supabase.rpc('cancel_plan', { p_plan_id: planId, p_note: note || null })
+  if (error) {
+    alert("Couldn't cancel the plan: " + error.message)
+    return false
+  }
+  setSelectedPlanId(null)
+  setScreen("home")
+  await loadData()
+  return true
+}
+
+const handleMarkNotificationRead = async (id) => {
+  await supabase.from('notifications').update({ read: true }).eq('id', id)
+  await loadData()
+}
+
+const handleMarkAllNotificationsRead = async () => {
+  await supabase.from('notifications').update({ read: true }).eq('read', false)
+  await loadData()
+}
+
+const handleDeleteNotification = async (id) => {
+  await supabase.from('notifications').delete().eq('id', id)
+  await loadData()
+}
+
   const handleUpdateItineraryItem = async (itemId, fields) => {
   const { data, error } = await supabase
     .from('itinerary_items')
@@ -268,6 +329,12 @@ const handleDeleteItineraryItem = async (itemId) => {
   }
 
   const currentPlan = plans.find(p => p.id === selectedPlanId)
+  useEffect(() => {
+  if (screen === "planDetail" && hasLoaded.current && !currentPlan) {
+    setSelectedPlanId(null)
+    setScreen("home")
+  }
+}, [screen, currentPlan])
   const usersWithRatings = users.map(user => ({
     ...user,
     ratings: ratings.filter(rating => rating.host_id === user.id),
@@ -313,6 +380,8 @@ const handleDeleteItineraryItem = async (itemId) => {
             users={usersWithRatings}
             onOpenPlan={handleOpenPlan}
             currentUserId={currentUserId}
+            unreadCount={notifications.filter(n => !n.read).length}
+            onOpenNotifications={() => setShowNotifications(true)}
           />
         }
         {screen === "myplans" &&
@@ -323,6 +392,7 @@ const handleDeleteItineraryItem = async (itemId) => {
             onOpenPlan={handleOpenPlan}
             onAcceptRequest={handleAcceptRequest}
             onDeclineRequest={handleDeclineRequest}
+            onOpenProfile={handleOpenUserProfile}
           />
         }
         
@@ -355,8 +425,20 @@ const handleDeleteItineraryItem = async (itemId) => {
             onToggleEditor={handleToggleEditor}
             onUpdateItineraryItem={handleUpdateItineraryItem}
             onDeleteItineraryItem={handleDeleteItineraryItem}
+            onCancelPlan={handleCancelPlan}
+            onOpenProfile={handleOpenUserProfile}
           />
         }
+          {showNotifications && (
+    <NotificationsModal
+      notifications={notifications}
+      users={users}
+      onMarkRead={handleMarkNotificationRead}
+      onMarkAllRead={handleMarkAllNotificationsRead}
+      onDelete={handleDeleteNotification}
+      onClose={() => setShowNotifications(false)}
+    />
+  )}
       </div>
 
       {screen !== "planDetail" && (
@@ -373,6 +455,18 @@ const handleDeleteItineraryItem = async (itemId) => {
           onCreatePlan={handleCreatePlan}
         />
       )}
+      {viewingUserId && usersWithRatings.find(u => u.id === viewingUserId) && (
+  <UserProfileModal
+    user={usersWithRatings.find(u => u.id === viewingUserId)}
+    users={usersWithRatings}
+    friendships={friendships}
+    currentUserId={currentUserId}
+    onSendRequest={handleSendFriendRequest}
+    onAccept={handleAcceptFriend}
+    onRemove={handleRemoveFriendship}
+    onClose={() => setViewingUserId(null)}
+  />
+)}
     </div>
   )
 }
