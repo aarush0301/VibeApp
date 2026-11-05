@@ -1,0 +1,18 @@
+.modal-backdrop { position: fixed; inset: 0; z-index: 200; display: flex; justify-content: center; align-items: center; padding: 28px; background: rgba(49, 37, 32, .4); }
+.modal-sheet { position: relative; display: flex; flex-direction: column; width: 100%; max-width: 560px; max-height: min(88dvh, 900px); border-radius: 16px; border: none; background: #fff9f4; box-shadow: 0 20px 70px rgba(57, 38, 28, .18); overflow: hidden; outline: none; }
+.modal-sheet > header, .modal-sheet > div:first-child:has(h2) { background: #fbe9e0; }
+.modal-sheet input, .modal-sheet textarea { font-size: 16px !important; background: #fff !important; border: 1px solid #d8c9bf !important; border-radius: 10px !important; min-height: 46px; }
+.modal-sheet button { min-height: 44px; }
+.modal-sheet button:has(> svg:only-child) { min-width: 44px; }
+.modal-sheet h2 { font-size: 23px !important; font-weight: 800; letter-spacing: -.03em; }
+.modal-sheet label { text-transform: none !important; letter-spacing: 0 !important; font-size: 13px !important; color: #685c56; }
+.modal-compact .modal-sheet { max-width: 440px; padding: 28px; }
+.user-profile-sheet { overflow-y: auto; padding-top: 32px; }
+.ai-sheet { height: min(82dvh, 740px); }
+@media (max-width: 600px) {
+  .modal-backdrop { padding: 0; align-items: flex-end; }
+  .modal-sheet { max-height: 92dvh; border-radius: 20px 20px 0 0; }
+  .modal-compact { align-items: center; padding: 20px; }
+  .modal-compact .modal-sheet { border-radius: 16px; padding: 24px; }
+  .ai-sheet { height: 90dvh; }
+}

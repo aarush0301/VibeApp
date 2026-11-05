@@ -1,26 +1,26 @@
 ﻿import { supabase } from './supabaseClient.js'
 
+function rows(result, label) {
+  if (result.error) throw new Error(`Could not load ${label}: ${result.error.message}`)
+  return result.data || []
+}
+
+const timeOf = ts =>
+  new Date(ts).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" })
+
 export async function fetchAllData() {
-  const results = await Promise.all([
+  const [u, p, m, r] = await Promise.all([
     supabase.from('users').select('*'),
     supabase.from('plans').select('*'),
     supabase.from('plan_members').select('*'),
     supabase.from('plan_requests').select('*'),
-    supabase.from('itinerary_items').select('*').order('created_at'),
-    supabase.from('messages').select('*').order('created_at'),
   ])
+  const usersData = rows(u, 'users')
+  const plansData = rows(p, 'plans')
+  const members   = rows(m, 'members')
+  const requests  = rows(r, 'requests')
 
-  const tableNames = ['users', 'plans', 'plan_members', 'plan_requests', 'itinerary_items', 'messages']
-  const failedQuery = results.find(result => result.error)
-
-  if (failedQuery) {
-    throw new Error('Could not load ' + tableNames[results.indexOf(failedQuery)] + ': ' + failedQuery.error.message)
-  }
-
-  const [usersData, plansData, membersData, requestsData, itineraryData, messagesData] = results.map(result => result.data)
-
-  // Rebuild each plan with its related data nested inside
-  const plans = (plansData || []).map(plan => ({
+  const plans = plansData.map(plan => ({
     id:                  plan.id,
     title:               plan.title,
     type:                plan.type,
@@ -33,69 +33,45 @@ export async function fetchAllData() {
     creatorId:           plan.creator_id,
     tags:                plan.tags || [],
     itineraryPermission: plan.itinerary_permission,
-    latitude: plan.latitude,
-    longitude: plan.longitude,
-
-    memberIds: (membersData || [])
-      .filter(m => m.plan_id === plan.id)
-      .map(m => m.user_id),
-
-    selectMembers: (membersData || [])
-      .filter(m => m.plan_id === plan.id && m.can_edit)
-      .map(m => m.user_id),
-
-    requestIds: (requestsData || [])
-      .filter(r => r.plan_id === plan.id)
-      .map(r => r.user_id),
-
-    itinerary: (itineraryData || [])
-      .filter(i => i.plan_id === plan.id)
-      .map(i => ({ id: i.id, time: i.time, activity: i.activity, note: i.note })),
-
-    chat: (messagesData || [])
-      .filter(m => m.plan_id === plan.id)
-      .map(m => ({
-        id:     m.id,
-        userId: m.user_id,
-        text:   m.text,
-        time:   new Date(m.created_at).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit" }),
-      })),
+    latitude:            plan.latitude,
+    longitude:           plan.longitude,
+    memberIds:           members.filter(x => x.plan_id === plan.id).map(x => x.user_id),
+    selectMembers:       members.filter(x => x.plan_id === plan.id && x.can_edit).map(x => x.user_id),
+    requestIds:          requests.filter(x => x.plan_id === plan.id).map(x => x.user_id),
+    itinerary:           [],
+    chat:                [],
   }))
 
-  const users = (usersData || []).map(u => ({
-    id:      u.id,
-    name:    u.name,
-    college: u.college,
-    year:    u.year,
-    age:     u.age,
-    bio:     u.bio,
-    vibes:   u.vibes || [],
+  const users = usersData.map(x => ({
+    id: x.id, name: x.name, college: x.college, year: x.year,
+    age: x.age, bio: x.bio, vibes: x.vibes || [],
   }))
 
   return { plans, users }
 }
 
+export async function fetchPlanDetails(planId) {
+  const [i, m] = await Promise.all([
+    supabase.from('itinerary_items').select('*').eq('plan_id', planId).order('created_at'),
+    supabase.from('messages').select('*').eq('plan_id', planId).order('created_at'),
+  ])
+  return {
+    itinerary: rows(i, 'itinerary').map(x => ({ id: x.id, time: x.time, activity: x.activity, note: x.note })),
+    chat: rows(m, 'messages').map(x => ({ id: x.id, userId: x.user_id, text: x.text, time: timeOf(x.created_at) })),
+  }
+}
+
 export async function fetchRatings() {
-  const { data, error } = await supabase
-    .from('ratings')
-    .select('*')
-    .order('created_at')
-  if (error) throw new Error('Could not load ratings: ' + error.message)
-  return data || []
+  return rows(await supabase.from('ratings').select('*').order('created_at'), 'ratings')
 }
 
 export async function fetchFriendships() {
-  const { data, error } = await supabase.from('friendships').select('*')
-  if (error) throw new Error('Could not load friendships: ' + error.message)
-  return data || []
+  return rows(await supabase.from('friendships').select('*'), 'friendships')
 }
 
 export async function fetchNotifications() {
-  const { data, error } = await supabase
-    .from('notifications')
-    .select('*')
-    .order('created_at', { ascending: false })
-    .limit(50)
-  if (error) throw new Error('Could not load notifications: ' + error.message)
-  return data || []
+  return rows(
+    await supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(50),
+    'notifications'
+  )
 }

@@ -1,0 +1,389 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-26T16:59:46.679Z",
+  "title": "Design System: Vibe App",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "displayName": "Campus Coral",
+        "role": "primary",
+        "canonical": "oklch(54.90% 0.1520 32.49)",
+        "tonalRamp": [
+          "oklch(15% 0.1520 32.49)",
+          "oklch(26% 0.1520 32.49)",
+          "oklch(38% 0.1520 32.49)",
+          "oklch(49% 0.1520 32.49)",
+          "oklch(61% 0.1520 32.49)",
+          "oklch(72% 0.1520 32.49)",
+          "oklch(84% 0.1520 32.49)",
+          "oklch(95% 0.1520 32.49)"
+        ]
+      },
+      "primary-hover": {
+        "displayName": "Deep Coral",
+        "role": "primary",
+        "canonical": "oklch(48.67% 0.1394 32.24)",
+        "tonalRamp": [
+          "oklch(15% 0.1394 32.24)",
+          "oklch(26% 0.1394 32.24)",
+          "oklch(38% 0.1394 32.24)",
+          "oklch(49% 0.1394 32.24)",
+          "oklch(61% 0.1394 32.24)",
+          "oklch(72% 0.1394 32.24)",
+          "oklch(84% 0.1394 32.24)",
+          "oklch(95% 0.1394 32.24)"
+        ]
+      },
+      "coral-soft": {
+        "displayName": "Soft Coral",
+        "role": "secondary",
+        "canonical": "oklch(92.58% 0.0334 43.51)",
+        "tonalRamp": [
+          "oklch(15% 0.0334 43.51)",
+          "oklch(26% 0.0334 43.51)",
+          "oklch(38% 0.0334 43.51)",
+          "oklch(49% 0.0334 43.51)",
+          "oklch(61% 0.0334 43.51)",
+          "oklch(72% 0.0334 43.51)",
+          "oklch(84% 0.0334 43.51)",
+          "oklch(95% 0.0334 43.51)"
+        ]
+      },
+      "nav-coral": {
+        "displayName": "Pale Coral",
+        "role": "secondary",
+        "canonical": "oklch(94.59% 0.0231 48.46)",
+        "tonalRamp": [
+          "oklch(15% 0.0231 48.46)",
+          "oklch(26% 0.0231 48.46)",
+          "oklch(38% 0.0231 48.46)",
+          "oklch(49% 0.0231 48.46)",
+          "oklch(61% 0.0231 48.46)",
+          "oklch(72% 0.0231 48.46)",
+          "oklch(84% 0.0231 48.46)",
+          "oklch(95% 0.0231 48.46)"
+        ]
+      },
+      "blue": {
+        "displayName": "Radio Blue",
+        "role": "secondary",
+        "canonical": "oklch(46.78% 0.0738 241.86)",
+        "tonalRamp": [
+          "oklch(15% 0.0738 241.86)",
+          "oklch(26% 0.0738 241.86)",
+          "oklch(38% 0.0738 241.86)",
+          "oklch(49% 0.0738 241.86)",
+          "oklch(61% 0.0738 241.86)",
+          "oklch(72% 0.0738 241.86)",
+          "oklch(84% 0.0738 241.86)",
+          "oklch(95% 0.0738 241.86)"
+        ]
+      },
+      "blue-soft": {
+        "displayName": "Sky Blue",
+        "role": "secondary",
+        "canonical": "oklch(93.49% 0.0210 236.76)",
+        "tonalRamp": [
+          "oklch(15% 0.0210 236.76)",
+          "oklch(26% 0.0210 236.76)",
+          "oklch(38% 0.0210 236.76)",
+          "oklch(49% 0.0210 236.76)",
+          "oklch(61% 0.0210 236.76)",
+          "oklch(72% 0.0210 236.76)",
+          "oklch(84% 0.0210 236.76)",
+          "oklch(95% 0.0210 236.76)"
+        ]
+      },
+      "lavender": {
+        "displayName": "Soft Lavender",
+        "role": "tertiary",
+        "canonical": "oklch(93.17% 0.0251 311.70)",
+        "tonalRamp": [
+          "oklch(15% 0.0251 311.70)",
+          "oklch(26% 0.0251 311.70)",
+          "oklch(38% 0.0251 311.70)",
+          "oklch(49% 0.0251 311.70)",
+          "oklch(61% 0.0251 311.70)",
+          "oklch(72% 0.0251 311.70)",
+          "oklch(84% 0.0251 311.70)",
+          "oklch(95% 0.0251 311.70)"
+        ]
+      },
+      "lavender-ink": {
+        "displayName": "Lavender Ink",
+        "role": "tertiary",
+        "canonical": "oklch(49.54% 0.0985 306.14)",
+        "tonalRamp": [
+          "oklch(15% 0.0985 306.14)",
+          "oklch(26% 0.0985 306.14)",
+          "oklch(38% 0.0985 306.14)",
+          "oklch(49% 0.0985 306.14)",
+          "oklch(61% 0.0985 306.14)",
+          "oklch(72% 0.0985 306.14)",
+          "oklch(84% 0.0985 306.14)",
+          "oklch(95% 0.0985 306.14)"
+        ]
+      },
+      "background": {
+        "displayName": "Warm Off-white",
+        "role": "neutral",
+        "canonical": "oklch(98.54% 0.0092 62.59)",
+        "tonalRamp": [
+          "oklch(15% 0.0092 62.59)",
+          "oklch(26% 0.0092 62.59)",
+          "oklch(38% 0.0092 62.59)",
+          "oklch(49% 0.0092 62.59)",
+          "oklch(61% 0.0092 62.59)",
+          "oklch(72% 0.0092 62.59)",
+          "oklch(84% 0.0092 62.59)",
+          "oklch(95% 0.0092 62.59)"
+        ]
+      },
+      "surface": {
+        "displayName": "White",
+        "role": "neutral",
+        "canonical": "oklch(100.00% 0.0000 89.88)",
+        "tonalRamp": [
+          "oklch(15% 0.0000 89.88)",
+          "oklch(26% 0.0000 89.88)",
+          "oklch(38% 0.0000 89.88)",
+          "oklch(49% 0.0000 89.88)",
+          "oklch(61% 0.0000 89.88)",
+          "oklch(72% 0.0000 89.88)",
+          "oklch(84% 0.0000 89.88)",
+          "oklch(95% 0.0000 89.88)"
+        ]
+      },
+      "text": {
+        "displayName": "Cocoa",
+        "role": "neutral",
+        "canonical": "oklch(29.60% 0.0110 36.50)",
+        "tonalRamp": [
+          "oklch(15% 0.0110 36.50)",
+          "oklch(26% 0.0110 36.50)",
+          "oklch(38% 0.0110 36.50)",
+          "oklch(49% 0.0110 36.50)",
+          "oklch(61% 0.0110 36.50)",
+          "oklch(72% 0.0110 36.50)",
+          "oklch(84% 0.0110 36.50)",
+          "oklch(95% 0.0110 36.50)"
+        ]
+      },
+      "secondary-text": {
+        "displayName": "Warm Secondary",
+        "role": "neutral",
+        "canonical": "oklch(48.44% 0.0183 48.32)",
+        "tonalRamp": [
+          "oklch(15% 0.0183 48.32)",
+          "oklch(26% 0.0183 48.32)",
+          "oklch(38% 0.0183 48.32)",
+          "oklch(49% 0.0183 48.32)",
+          "oklch(61% 0.0183 48.32)",
+          "oklch(72% 0.0183 48.32)",
+          "oklch(84% 0.0183 48.32)",
+          "oklch(95% 0.0183 48.32)"
+        ]
+      },
+      "muted-text": {
+        "displayName": "Warm Muted",
+        "role": "neutral",
+        "canonical": "oklch(53.50% 0.0216 51.71)",
+        "tonalRamp": [
+          "oklch(15% 0.0216 51.71)",
+          "oklch(26% 0.0216 51.71)",
+          "oklch(38% 0.0216 51.71)",
+          "oklch(49% 0.0216 51.71)",
+          "oklch(61% 0.0216 51.71)",
+          "oklch(72% 0.0216 51.71)",
+          "oklch(84% 0.0216 51.71)",
+          "oklch(95% 0.0216 51.71)"
+        ]
+      },
+      "border": {
+        "displayName": "Warm Border",
+        "role": "neutral",
+        "canonical": "oklch(90.46% 0.0180 59.46)",
+        "tonalRamp": [
+          "oklch(15% 0.0180 59.46)",
+          "oklch(26% 0.0180 59.46)",
+          "oklch(38% 0.0180 59.46)",
+          "oklch(49% 0.0180 59.46)",
+          "oklch(61% 0.0180 59.46)",
+          "oklch(72% 0.0180 59.46)",
+          "oklch(84% 0.0180 59.46)",
+          "oklch(95% 0.0180 59.46)"
+        ]
+      },
+      "success": {
+        "displayName": "Leaf Green",
+        "role": "semantic",
+        "canonical": "oklch(49.80% 0.0961 158.74)",
+        "tonalRamp": [
+          "oklch(15% 0.0961 158.74)",
+          "oklch(26% 0.0961 158.74)",
+          "oklch(38% 0.0961 158.74)",
+          "oklch(49% 0.0961 158.74)",
+          "oklch(61% 0.0961 158.74)",
+          "oklch(72% 0.0961 158.74)",
+          "oklch(84% 0.0961 158.74)",
+          "oklch(95% 0.0961 158.74)"
+        ]
+      },
+      "danger": {
+        "displayName": "Warm Red",
+        "role": "semantic",
+        "canonical": "oklch(52.56% 0.1640 21.93)",
+        "tonalRamp": [
+          "oklch(15% 0.1640 21.93)",
+          "oklch(26% 0.1640 21.93)",
+          "oklch(38% 0.1640 21.93)",
+          "oklch(49% 0.1640 21.93)",
+          "oklch(61% 0.1640 21.93)",
+          "oklch(72% 0.1640 21.93)",
+          "oklch(84% 0.1640 21.93)",
+          "oklch(95% 0.1640 21.93)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Rounded Display",
+        "purpose": "Authentication introductions."
+      },
+      "headline": {
+        "displayName": "Page Headline",
+        "purpose": "Current page identity."
+      }
+    },
+    "shadows": [
+      {
+        "name": "raised-surface",
+        "value": "0 12px 36px rgba(73,45,31,0.08)",
+        "purpose": "Supporting elevated content."
+      },
+      {
+        "name": "dialog",
+        "value": "0 20px 70px rgba(57,38,28,0.18)",
+        "purpose": "Dialogs over a cocoa backdrop."
+      }
+    ],
+    "motion": [
+      {
+        "name": "interaction",
+        "value": "180ms ease",
+        "purpose": "Control color transitions."
+      },
+      {
+        "name": "sheet-entry",
+        "value": "240ms cubic-bezier(.16,1,.3,1)",
+        "purpose": "20px dialog entry; disabled with reduced motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "cards-single",
+        "value": "560px"
+      },
+      {
+        "name": "dialog-sheet",
+        "value": "600px"
+      },
+      {
+        "name": "bottom-navigation",
+        "value": "800px"
+      },
+      {
+        "name": "auth-stacked",
+        "value": "900px"
+      },
+      {
+        "name": "compact-desktop",
+        "value": "1100px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Primary form and creation action.",
+      "html": "<button class=\"ds-example\">Create a plan</button>",
+      "css": ".ds-example{font-family:Manrope,sans-serif;background:#b94732;color:white;border:0;border-radius:12px;padding:11px 19px;min-height:46px;font-size:14px;font-weight:700;cursor:pointer;transition:background 180ms ease}.ds-example:hover{background:#9f3927}.ds-example:focus-visible{outline:2px solid #315f80;outline-offset:4px}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Profile and supporting actions.",
+      "html": "<button class=\"ds-example\">Edit profile</button>",
+      "css": ".ds-example{font-family:Manrope,sans-serif;background:white;color:#322b29;border:1px solid #e9ddd4;border-radius:12px;padding:11px 19px;min-height:46px;font-size:14px;font-weight:700;cursor:pointer}.ds-example:hover{background:#fbe9e0}.ds-example:focus-visible{outline:2px solid #315f80;outline-offset:4px}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Readable labeled fields.",
+      "html": "<label class=\"ds-label\" for=\"ds-plan\">Plan name</label><input class=\"ds-example\" id=\"ds-plan\" placeholder=\"A coffee and a catch-up\" />",
+      "css": ".ds-label{font-family:Manrope,sans-serif;display:block;font-size:13px;font-weight:700;color:#685c56;margin-bottom:8px}.ds-example{font-family:Manrope,sans-serif;width:100%;background:white;color:#322b29;border:1px solid #d8c9bf;border-radius:10px;padding:11px 14px;min-height:46px;font-size:16px}.ds-example::placeholder{color:#786a62}.ds-example:hover{border-color:#a58b7d}.ds-example:focus-visible{outline:2px solid #315f80;outline-offset:4px}"
+    },
+    {
+      "name": "Navigation",
+      "kind": "nav",
+      "refersTo": "navigation",
+      "description": "Soft coral navigation with visible active state.",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Example navigation\"><button class=\"ds-example\" aria-current=\"page\">Discover</button><button class=\"ds-example\">My Plans</button></nav>",
+      "css": ".ds-nav{background:#fbe9e0;padding:16px;display:flex;gap:8px}.ds-example{font-family:Manrope,sans-serif;border:0;border-radius:12px;background:transparent;color:#6d5045;font-size:14px;font-weight:600;padding:15px 18px;cursor:pointer}.ds-example[aria-current]{background:#fff9f4;color:#9d3928;font-weight:800}.ds-example:hover{background:#f5d9ca}.ds-example:focus-visible{outline:2px solid #315f80;outline-offset:4px}"
+    },
+    {
+      "name": "Activity Label",
+      "kind": "chip",
+      "refersTo": "activity-label",
+      "description": "Readable activity identity retained in plan details.",
+      "html": "<span class=\"ds-label\">Outing</span>",
+      "css": ".ds-label{font-family:Manrope,sans-serif;display:inline-flex;background:#eee4f5;color:#70528e;border-radius:8px;padding:6px 10px;font-size:11px;font-weight:800}"
+    },
+    {
+      "name": "Plan Card",
+      "kind": "card",
+      "refersTo": "plan-card",
+      "description": "A compact summary for a single plan.",
+      "html": "<article class=\"ds-card\"><span class=\"ds-label\">Outing</span><h2>Coffee & catch-ups</h2><p>Plan location · Date · Time</p><footer>Hosted by a student<span>3 spots left</span></footer></article>",
+      "css": ".ds-card{font-family:Manrope,sans-serif;padding:22px;background:white;color:#322b29;border:1px solid #e9ddd4;border-radius:16px}.ds-label{display:inline-flex;padding:6px 10px;background:#eee4f5;color:#70528e;border-radius:8px;font-size:11px;font-weight:800}.ds-card h2{font-size:21px;line-height:1.2;letter-spacing:-.025em;margin:18px 0 12px;font-weight:800}.ds-card p{font-size:13px;color:#685c56}.ds-card footer{display:flex;justify-content:space-between;gap:12px;border-top:1px solid #e9ddd4;margin-top:20px;padding-top:16px;font-size:12px}.ds-card footer span{color:#26734e;font-weight:700}"
+    }
+  ],
+  "narrative": {
+    "northStar": "Campus Radio",
+    "overview": "The user selected warm coral, blue, and a softer feel for every page. The system combines rounded Manrope lettering, pale colored surfaces, and familiar app controls. Personality comes from friendly language and activity colors while practical plan details remain easy to scan.",
+    "keyCharacteristics": [
+      "Warm light surfaces with dark, legible text.",
+      "Coral primary actions and sky blue welcome areas.",
+      "Consistent activity colors from discovery to plan details.",
+      "Spacious desktop work areas and comfortable mobile controls."
+    ],
+    "rules": [
+      {
+        "name": "The Activity Continuity Rule",
+        "body": "Use TYPE_CONFIG in src/theme.js for activity identity across cards and details. Party is peach, Trip green, Outing lavender, Food Run yellow, Sports blue, and Study Sesh pink. Pair every color with an activity name.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Family Rule",
+        "body": "Use the bundled Manrope family throughout, including controls. Allow long names and titles to wrap inside their containers.",
+        "section": "typography"
+      }
+    ],
+    "dos": [
+      "Do pair activity colors with readable labels.",
+      "Do preserve warm coral and sky blue across new screens.",
+      "Do provide visible focus, useful empty states, and descriptive field labels.",
+      "Do check long names, narrow screens, and scrolling dialog content."
+    ],
+    "donts": [
+      "Don't use color alone to communicate selection or availability.",
+      "Don't replace the locally hosted font with a system display face.",
+      "Don't add ornamental gradients or glows to the flat, soft surface language.",
+      "Don't turn the radio identity into unfamiliar controls or navigation."
+    ]
+  }
+}

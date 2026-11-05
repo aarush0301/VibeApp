@@ -1,3 +1,4 @@
+import ModalFrame from './ModalFrame.jsx'
 import { useState } from 'react'
 import { T } from '../theme.js'
 
@@ -13,17 +14,16 @@ function CancelPlanModal({ plan, notifyCount, onConfirm, onClose }) {
   }
 
   return (
-    <div style={styles.backdrop} className="backdrop-fade">
-      <div style={styles.card}>
+    <ModalFrame title="Cancel this plan?" onClose={onClose} compact>
         <h3 style={styles.title}>Cancel this plan?</h3>
         <p style={styles.text}>
           "{plan.title}" will be permanently deleted, including its chat, itinerary and ratings. This cannot be undone.
         </p>
 
-        <label style={styles.label}>
+        <label htmlFor="cancel-note" style={styles.label}>
           Note for members {notifyCount > 0 ? `(${notifyCount} will be notified)` : "(nobody to notify)"}
         </label>
-        <textarea
+        <textarea id="cancel-note"
           value={note}
           onChange={e => setNote(e.target.value)}
           maxLength={500}
@@ -44,21 +44,18 @@ function CancelPlanModal({ plan, notifyCount, onConfirm, onClose }) {
             {submitting ? "Cancelling..." : "Cancel plan"}
           </button>
         </div>
-      </div>
-    </div>
+    </ModalFrame>
   )
 }
 
 const styles = {
-  backdrop:  { position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 300, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 },
-  card:      { background: T.card, borderRadius: 24, padding: 24, width: "100%", maxWidth: 380, boxShadow: T.shadow },
   title:     { fontSize: 18, fontWeight: "800", color: T.text, marginBottom: 8 },
   text:      { fontSize: 13, color: T.textSec, lineHeight: 1.55, marginBottom: 16 },
   label:     { display: "block", fontSize: 12, fontWeight: "600", color: T.textMut, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 8 },
   textarea:  { width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 12, border: "1.5px solid transparent", background: T.muted, fontSize: 14, fontFamily: "inherit", resize: "none", outline: "none", color: T.text },
   count:     { fontSize: 11, color: T.textMut, textAlign: "right", margin: "4px 0 14px" },
-  keepBtn:   { flex: 1, padding: 12, borderRadius: 14, border: "none", background: "rgba(255,255,255,0.08)", color: T.textSec, fontSize: 14, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" },
-  deleteBtn: { flex: 1, padding: 12, borderRadius: 14, border: "none", background: "#E5484D", color: "#fff", fontSize: 14, fontWeight: "700", fontFamily: "inherit", cursor: "pointer" },
+  keepBtn:   { flex: 1, padding: 12, borderRadius: 14, border: "none", background: T.raised, color: T.textSec, fontSize: 14, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" },
+  deleteBtn: { flex: 1, padding: 12, borderRadius: 14, border: "none", background: T.danger, color: "#fff", fontSize: 14, fontWeight: "700", fontFamily: "inherit", cursor: "pointer" },
 }
 
 export default CancelPlanModal

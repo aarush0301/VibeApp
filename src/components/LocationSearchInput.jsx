@@ -11,7 +11,7 @@ function buildSubtitle(p) {
   return [p.street, p.district, p.city, p.state, p.country].filter(Boolean).join(", ")
 }
 
-function LocationSearchInput({ value, onChange }) {
+function LocationSearchInput({ id, value, onChange }) {
   const [query, setQuery]               = useState(value || "")
   const [suggestions, setSuggestions]   = useState([])
   const [showDropdown, setShowDropdown] = useState(false)
@@ -105,6 +105,7 @@ function LocationSearchInput({ value, onChange }) {
   return (
     <div ref={wrapperRef} style={{ position: "relative" }}>
       <input
+        id={id}
         value={query}
         onChange={e => handleTyping(e.target.value)}
         onFocus={() => setShowDropdown(true)}
@@ -117,12 +118,12 @@ function LocationSearchInput({ value, onChange }) {
       {showDropdown && suggestions.length > 0 && (
         <div style={styles.dropdown}>
           {suggestions.map((place, i) => (
-            <div key={i} onClick={() => selectSuggestion(place)} style={styles.item}>
-              <div style={{ fontSize: 14, color: T.text, fontWeight: "600" }}>📍 {place.label}</div>
+            <button type="button" key={i} onClick={() => selectSuggestion(place)} style={styles.item}>
+              <span style={{ display: 'block', fontSize: 14, color: T.text, fontWeight: "600" }}>{place.label}</span>
               {place.subtitle && (
-                <div style={{ fontSize: 12, color: T.textMut, marginTop: 2 }}>{place.subtitle}</div>
+                <span style={{ display: 'block', fontSize: 12, color: T.textMut, marginTop: 2 }}>{place.subtitle}</span>
               )}
-            </div>
+            </button>
           ))}
         </div>
       )}
@@ -135,10 +136,10 @@ function LocationSearchInput({ value, onChange }) {
 }
 
 const styles = {
-  input:    { width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, background: T.muted, fontSize: 14, fontFamily: "inherit", outline: "none", color: T.text, marginBottom: 4 },
+  input:    { width: "100%", padding: "11px 12px", borderRadius: 8, border: `1px solid ${T.chip}`, background: T.bg, fontSize: 16, color: T.text, marginBottom: 4 },
   hint:     { fontSize: 12, color: T.textMut, padding: "4px 2px", marginBottom: 12 },
-  dropdown: { position: "absolute", top: "100%", left: 0, right: 0, background: T.card, border: `1px solid ${T.border}`, borderRadius: 10, marginTop: 4, maxHeight: 260, overflowY: "auto", zIndex: 20, boxShadow: "0 8px 24px rgba(0,0,0,0.5)" },
-  item:     { padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${T.border}` },
+  dropdown: { position: "absolute", top: "100%", left: 0, right: 0, background: T.card, borderRadius: 10, marginTop: 4, maxHeight: 260, overflowY: "auto", zIndex: 20, boxShadow: T.shadow },
+  item:     { display: 'block', width: '100%', textAlign: 'left', background: T.card, border: 'none', padding: "10px 14px", cursor: "pointer", borderBottom: `1px solid ${T.border}` },
 }
 
 export default LocationSearchInput

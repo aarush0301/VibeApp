@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
-import { ArrowLeft, Pencil, Trash2, Sparkles } from 'lucide-react'
-import { T, TYPE_CONFIG, getAvatarColor } from '../theme.js'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { ArrowLeft, Pencil, Trash2, Sparkles, Send } from 'lucide-react'
+import { T, TYPE_CONFIG, getAvatarColor, formatDate } from '../theme.js'
 import { getRatingStats, ratingLabel } from '../ratingUtils.js'
 import Stars from './Stars.jsx'
 import RateModal from './RateModal.jsx'
 import CancelPlanModal from './CancelPlanModal.jsx'
-import AIChatPanel from './AIChatPanel.jsx'
+
+const AIChatPanel = lazy(() => import('./AIChatPanel.jsx'))
 
 const initialsOf = name => name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
 
@@ -39,6 +40,11 @@ function PlanDetailScreen({
 
   const getUserById = id =>
     users.find(u => u.id === id) || { id, name: "Unknown", college: "", year: "", vibes: [], ratings: [] }
+  const profileTrigger = id => ({
+    role: 'button', tabIndex: 0, 'aria-label': `View ${getUserById(id).name}'s profile`,
+    onClick: () => onOpenProfile(id),
+    onKeyDown: event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onOpenProfile(id) } },
+  })
 
   const hasRequested = plan.requestIds.includes(currentUserId)
   const isMember     = plan.memberIds.includes(currentUserId)
@@ -111,15 +117,15 @@ function PlanDetailScreen({
   ]
 
   return (
-    <div style={{ background: T.bg, minHeight: "100vh", fontFamily: "system-ui, sans-serif" }}>
+    <section className="app-page detail-page">
 
       {/* Back */}
-      <button onClick={onBack} className="tap" style={styles.backBtn}>
-        <ArrowLeft size={18} /> Back
+      <button onClick={onBack} className="detail-back tap">
+        <ArrowLeft size={18} /> Back to plans
       </button>
 
       {/* Header */}
-      <div style={styles.header}>
+      <div className="detail-header" style={{ background: config.bg }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
           <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: "700", padding: "5px 12px", borderRadius: 20, background: config.bg, color: config.color }}>
             <span style={{ width: 6, height: 6, borderRadius: "50%", background: config.dot, display: "inline-block" }} />
@@ -127,27 +133,31 @@ function PlanDetailScreen({
           </span>
           <span style={{ fontSize: 12, color: T.textMut }}>{plan.isPublic ? "Public" : "Friends only"}</span>
         </div>
-        <h1 style={{ fontSize: 24, fontWeight: "800", color: T.text, marginBottom: 12, letterSpacing: -0.5 }}>{plan.title}</h1>
+        <h1>{plan.title}</h1>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
-          {[plan.location, plan.date, plan.time || "Time TBD"].map(pill => (
+          {[plan.location, formatDate(plan.date), plan.time || "Time TBD"].map(pill => (
             <span key={pill} style={styles.pill}>{pill}</span>
           ))}
         </div>
       </div>
 
       {/* Tabs */}
-      <div style={styles.tabRow}>
+      <div className="detail-tabs" role="tablist" aria-label="Plan details">
         {tabs.map(tab => (
           <button
             key={tab.id}
+            role="tab"
+            id={`detail-${tab.id}`}
+            aria-controls="detail-content"
+            aria-selected={activeTab === tab.id}
+            tabIndex={activeTab === tab.id ? 0 : -1}
             onClick={() => setActiveTab(tab.id)}
-            className="tab-btn"
-            style={{
-              flex: 1, padding: "10px 0", border: "none", cursor: "pointer", fontSize: 13, fontFamily: "inherit", borderRadius: 14,
-              background: activeTab === tab.id ? "rgba(255,107,74,0.16)" : "transparent",
-              color:      activeTab === tab.id ? T.orange : T.textMut,
-              fontWeight: activeTab === tab.id ? "700" : "500",
+            onKeyDown={event => {
+              const index = tabs.findIndex(item => item.id === tab.id)
+              const nextIndex = event.key === 'ArrowRight' ? (index + 1) % tabs.length : event.key === 'ArrowLeft' ? (index - 1 + tabs.length) % tabs.length : event.key === 'Home' ? 0 : event.key === 'End' ? tabs.length - 1 : null
+              if (nextIndex !== null) { event.preventDefault(); setActiveTab(tabs[nextIndex].id); document.getElementById(`detail-${tabs[nextIndex].id}`)?.focus() }
             }}
+            className="tab-btn"
           >
             {tab.label}
           </button>
@@ -155,30 +165,30 @@ function PlanDetailScreen({
       </div>
 
       {/* Content */}
-      <div style={{ padding: "8px 16px 120px" }}>
+      <div id="detail-content" role="tabpanel" aria-labelledby={`detail-${activeTab}`} className="detail-content">
 
         {/* ═════ INFO ═════ */}
         {activeTab === "info" && (
           <div>
             <p style={{ fontSize: 14, color: T.textSec, lineHeight: 1.65, marginBottom: 20 }}>{plan.description}</p>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 20 }}>
+            <div className="detail-facts">
               {[
                 ["Type",       plan.type,                                      config.bg,                                                         config.color],
-                ["Members",    `${plan.memberIds.length}/${plan.maxMembers}`,  "rgba(139,124,255,0.16)",                                         "#B4A9FF"],
-                ["Spots left", spotsLeft,                                      spotsLeft <= 2 ? "rgba(255,107,74,0.14)" : "rgba(52,211,153,0.14)", spotsLeft <= 2 ? "#FF8A70" : "#5EE0B0"],
-                ["Visibility", plan.isPublic ? "Public" : "Friends only",      "rgba(255,255,255,0.06)",                                          T.textSec],
-              ].map(([label, value, bg, color]) => (
-                <div key={label} style={{ background: bg, borderRadius: 18, padding: 14 }}>
-                  <div style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: 4, color, opacity: 0.8 }}>{label}</div>
-                  <div style={{ fontSize: 16, fontWeight: "700", color }}>{value}</div>
+                ["Members",    `${plan.memberIds.length}/${plan.maxMembers}`,  T.lavender,                                         T.purple],
+                ["Spots left", spotsLeft,                                      spotsLeft <= 2 ? T.peach : T.success, spotsLeft <= 2 ? T.orange : T.green],
+                ["Visibility", plan.isPublic ? "Public" : "Friends only",      T.raised,                                          T.textSec],
+              ].map(([label, value]) => (
+                <div key={label} className="detail-fact">
+                  <span>{label}</span>
+                  <strong>{value}</strong>
                 </div>
               ))}
             </div>
 
             {/* Host card */}
             <div style={styles.card}>
-              <div onClick={() => onOpenProfile(host.id)} className="tap" style={{ flex: 1, cursor: "pointer" }}>
+              <div {...profileTrigger(host.id)} className="tap" style={{ flex: 1, cursor: "pointer" }}>
                 <div style={styles.cardLabel}>Created by</div>
                 <div style={{ fontSize: 15, fontWeight: "700", color: T.text }}>{host.name}</div>
                 <div style={{ fontSize: 12, color: T.textMut, marginTop: 2 }}>{host.college}</div>
@@ -197,7 +207,7 @@ function PlanDetailScreen({
               </div>
               {canRate && (
                 hasRated
-                  ? <span style={{ fontSize: 11, color: "#5EE0B0", background: "rgba(52,211,153,0.14)", padding: "5px 12px", borderRadius: 12, fontWeight: "700" }}>Rated</span>
+                  ? <span style={{ fontSize: 11, color: T.green, background: T.success, padding: "5px 12px", borderRadius: 12, fontWeight: "700" }}>Rated</span>
                   : <button onClick={() => setShowRate(true)} className="tap" style={styles.rateBtn}>Rate host</button>
               )}
             </div>
@@ -207,23 +217,23 @@ function PlanDetailScreen({
                 <p style={styles.cardLabel}>Looking for</p>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8 }}>
                   {plan.tags.map(tag => (
-                    <span key={tag} style={{ background: "rgba(139,124,255,0.16)", color: "#B4A9FF", fontSize: 12, padding: "5px 12px", borderRadius: 20, fontWeight: "500" }}>{tag}</span>
+                    <span key={tag} style={{ background: T.lavender, color: T.purple, fontSize: 12, padding: "5px 12px", borderRadius: 20, fontWeight: "500" }}>{tag}</span>
                   ))}
                 </div>
               </div>
             )}
 
-            {isCreator && <div style={styles.infoBox("rgba(139,124,255,0.16)", "#B4A9FF")}>You created this plan</div>}
+            {isCreator && <div style={styles.infoBox(T.lavender, T.purple)}>You created this plan</div>}
             {isCreator && (
               <button onClick={() => setShowCancel(true)} className="tap" style={styles.dangerBtn}>
                 Cancel this plan
               </button>
             )}
-            {isMember && !isCreator && <div style={styles.infoBox("rgba(52,211,153,0.14)", "#5EE0B0")}>You're in this plan</div>}
+            {isMember && !isCreator && <div style={styles.infoBox(T.success, T.green)}>You're in this plan</div>}
 
             {hasRequested && !isMember && (
               <div>
-                <div style={styles.infoBox("rgba(251,191,36,0.14)", T.yellow)}>Request pending, waiting for the creator to accept</div>
+                <div style={styles.infoBox("#FAEDCB", T.yellow)}>Request pending, waiting for the creator to accept</div>
                 <button onClick={() => onCancelRequest(plan.id)} className="tap" style={styles.cancelBtn}>Cancel request</button>
               </div>
             )}
@@ -233,7 +243,7 @@ function PlanDetailScreen({
             )}
 
             {!isMember && !hasRequested && spotsLeft === 0 && (
-              <div style={styles.infoBox("rgba(255,255,255,0.06)", T.textSec)}>This plan is full</div>
+              <div style={styles.infoBox(T.raised, T.textSec)}>This plan is full</div>
             )}
           </div>
         )}
@@ -251,14 +261,14 @@ function PlanDetailScreen({
               const canEdit = plan.selectMembers?.includes(uid)
               return (
                 <div key={uid} style={styles.row}>
-                  <div onClick={() => onOpenProfile(uid)} style={{ ...styles.memberAvatar, background: getAvatarColor(u.name), cursor: "pointer" }}>
+                  <div {...profileTrigger(uid)} style={{ ...styles.memberAvatar, background: getAvatarColor(u.name), cursor: "pointer" }}>
                     {initialsOf(u.name)}
                   </div>
-                  <div onClick={() => onOpenProfile(uid)} style={{ flex: 1, minWidth: 0, cursor: "pointer" }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: "700", color: T.text, display: "flex", alignItems: "center", gap: 6 }}>
                       {u.name}
                       {uid === plan.creatorId && (
-                        <span style={{ fontSize: 10, background: "rgba(139,124,255,0.16)", color: "#B4A9FF", padding: "2px 8px", borderRadius: 10, fontWeight: "700" }}>Admin</span>
+                        <span style={{ fontSize: 10, background: T.lavender, color: T.purple, padding: "2px 8px", borderRadius: 10, fontWeight: "700" }}>Admin</span>
                       )}
                     </div>
                     <div style={{ fontSize: 12, color: T.textMut, marginTop: 2 }}>
@@ -277,7 +287,7 @@ function PlanDetailScreen({
                     </div>
                     <div style={{ display: "flex", flexWrap: "wrap", gap: 4, marginTop: 6 }}>
                       {u.vibes?.slice(0, 2).map(v => (
-                        <span key={v} style={{ fontSize: 11, background: "rgba(255,255,255,0.06)", color: T.textSec, padding: "2px 9px", borderRadius: 10 }}>{v}</span>
+                        <span key={v} style={{ fontSize: 11, background: T.raised, color: T.textSec, padding: "2px 9px", borderRadius: 10 }}>{v}</span>
                       ))}
                     </div>
                   </div>
@@ -289,8 +299,8 @@ function PlanDetailScreen({
                       className="tap"
                       style={{
                         flexShrink: 0, padding: "7px 12px", borderRadius: 12, fontSize: 11, fontWeight: "700", fontFamily: "inherit", cursor: "pointer", border: "none",
-                        background: canEdit ? "rgba(52,211,153,0.16)" : "rgba(255,255,255,0.07)",
-                        color:      canEdit ? "#5EE0B0" : T.textMut,
+                        background: canEdit ? T.success : T.raised,
+                        color:      canEdit ? T.green : T.textMut,
                       }}
                     >
                       {canEdit ? "Can edit" : "Can't edit"}
@@ -308,11 +318,11 @@ function PlanDetailScreen({
                 {plan.requestIds.map(uid => {
                   const u = getUserById(uid)
                   return (
-                    <div key={uid} style={{ display: "flex", alignItems: "center", gap: 12, background: "rgba(251,191,36,0.10)", borderRadius: 18, padding: 12, marginBottom: 10 }}>
-                      <div onClick={() => onOpenProfile(uid)} style={{ ...styles.memberAvatar, background: getAvatarColor(u.name), cursor: "pointer" }}>
+                    <div key={uid} style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAEDCB", borderRadius: 18, padding: 12, marginBottom: 10 }}>
+                      <div {...profileTrigger(uid)} style={{ ...styles.memberAvatar, background: getAvatarColor(u.name), cursor: "pointer" }}>
                         {initialsOf(u.name)}
                       </div>
-                      <div onClick={() => onOpenProfile(uid)} style={{ flex: 1, cursor: "pointer" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: "700", color: T.text }}>{u.name}</div>
                         <div style={{ fontSize: 11, color: T.textMut, marginTop: 2 }}>
                           {u.college}{u.year ? ` · ${u.year} yr` : ""}
@@ -361,7 +371,7 @@ function PlanDetailScreen({
                   <div style={{ width: 75, display: "flex", flexDirection: "column", alignItems: "flex-end", flexShrink: 0, paddingTop: 2 }}>
                     <span style={{ fontSize: 12, fontWeight: "700", color: T.orange, whiteSpace: "nowrap" }}>{item.time}</span>
                     {index < plan.itinerary.length - 1 && (
-                      <div style={{ width: 2, flex: 1, background: "rgba(255,255,255,0.08)", marginTop: 6, minHeight: 24, borderRadius: 1 }} />
+                      <div style={{ width: 2, flex: 1, background: T.raised, marginTop: 6, minHeight: 24, borderRadius: 1 }} />
                     )}
                   </div>
                   <div style={{ width: 10, height: 10, borderRadius: "50%", background: T.orange, flexShrink: 0, marginTop: 4 }} />
@@ -375,7 +385,7 @@ function PlanDetailScreen({
                         <Pencil size={14} color={T.textSec} />
                       </button>
                       <button onClick={() => handleDelete(item)} className="tap" style={styles.iconBtn} aria-label="Delete item">
-                        <Trash2 size={14} color="#FF8A70" />
+                        <Trash2 size={14} color={T.orange} />
                       </button>
                     </div>
                   )}
@@ -418,14 +428,14 @@ function PlanDetailScreen({
                 return (
                   <div key={msg.id} style={{ display: "flex", gap: 8, alignItems: "flex-end", flexDirection: isMe ? "row-reverse" : "row" }}>
                     {!isMe && (
-                      <div onClick={() => onOpenProfile(msg.userId)} style={{ ...styles.memberAvatar, width: 28, height: 28, fontSize: 10, background: getAvatarColor(sender.name), cursor: "pointer" }}>
+                      <div {...profileTrigger(msg.userId)} style={{ ...styles.memberAvatar, width: 36, height: 36, fontSize: 11, background: getAvatarColor(sender.name), cursor: "pointer" }}>
                         {initialsOf(sender.name)}
                       </div>
                     )}
                     <div style={{ maxWidth: "72%" }}>
                       {!isMe && <div style={{ fontSize: 11, color: T.textMut, marginBottom: 3 }}>{sender.name.split(" ")[0]}</div>}
                       <div style={{
-                        padding: "10px 14px", fontSize: 14, lineHeight: 1.45, color: "#fff",
+                        padding: "10px 14px", fontSize: 14, lineHeight: 1.6, color: isMe ? T.onAccent : T.text, overflowWrap: 'anywhere',
                         background:   isMe ? T.gradient : T.card,
                         borderRadius: isMe ? "20px 6px 20px 20px" : "6px 20px 20px 20px",
                       }}>
@@ -445,6 +455,7 @@ function PlanDetailScreen({
                 onChange={e => setChatInput(e.target.value)}
                 onKeyDown={e => e.key === "Enter" && handleSendMessage()}
                 placeholder="Message..."
+                aria-label="Message the group"
                 style={{ ...styles.input, flex: 1, margin: 0, borderRadius: 22 }}
               />
               <button
@@ -453,7 +464,7 @@ function PlanDetailScreen({
                 style={{ width: 42, height: 42, borderRadius: "50%", background: T.gradient, border: "none", color: "#fff", fontSize: 16, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center", boxShadow: T.glow }}
                 aria-label="Send"
               >
-                ➤
+                <Send size={18} />
               </button>
             </div>
           </div>
@@ -461,13 +472,13 @@ function PlanDetailScreen({
       </div>
 
       {/* Floating AI button */}
-      <button onClick={() => setShowAI(true)} className="tap" style={styles.aiBtn}>
+      <button onClick={() => setShowAI(true)} className="ai-launch tap">
         <Sparkles size={15} /> AI Assistant
       </button>
 
       {showRate && (
         <RateModal
-          host={host}
+          hostName={host.name}
           onClose={() => setShowRate(false)}
           onSubmit={(score, comment) => onRateHost(plan.id, plan.creatorId, score, comment)}
         />
@@ -482,32 +493,32 @@ function PlanDetailScreen({
         />
       )}
 
-      {showAI && <AIChatPanel plan={plan} onClose={() => setShowAI(false)} />}
-    </div>
+      {showAI && (
+        <Suspense fallback={null}>
+          <AIChatPanel plan={plan} onClose={() => setShowAI(false)} />
+        </Suspense>
+      )}
+    </section>
   )
 }
 
 const styles = {
-  backBtn:     { background: "none", border: "none", fontSize: 15, color: T.orange, cursor: "pointer", padding: "18px 16px 8px", fontFamily: "inherit", fontWeight: "700", display: "flex", alignItems: "center", gap: 6 },
-  header:      { padding: "8px 20px 20px" },
-  pill:        { fontSize: 12, color: T.textSec, background: "rgba(255,255,255,0.07)", padding: "6px 12px", borderRadius: 20 },
-  tabRow:      { display: "flex", gap: 6, margin: "0 16px 16px", padding: 5, borderRadius: 20, background: "rgba(255,255,255,0.05)" },
+  pill:        { fontSize: 12, color: T.textSec, background: T.raised, padding: "6px 12px", borderRadius: 20 },
   card:        { background: T.card, borderRadius: 20, padding: 16, marginBottom: 20, display: "flex", alignItems: "center", gap: 12, boxShadow: T.shadow },
   cardLabel:   { fontSize: 11, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.6px", fontWeight: "700", marginBottom: 4 },
-  ratingTag:   { fontSize: 10, background: "rgba(251,191,36,0.14)", color: T.yellow, padding: "2px 8px", borderRadius: 10, fontWeight: "700" },
-  rateBtn:     { background: "#FBBF24", color: "#1A1305", border: "none", borderRadius: 14, padding: "9px 14px", fontSize: 12, fontWeight: "800", fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap" },
+  ratingTag:   { fontSize: 10, background: "#FAEDCB", color: T.yellow, padding: "2px 8px", borderRadius: 10, fontWeight: "700" },
+  rateBtn:     { background: "#FAEDCB", color: "#1A1305", border: "none", borderRadius: 14, padding: "9px 14px", fontSize: 12, fontWeight: "800", fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap" },
   infoBox:     (bg, color) => ({ padding: "14px 16px", borderRadius: 16, fontSize: 14, fontWeight: "600", marginBottom: 12, background: bg, color }),
   joinBtn:     { width: "100%", padding: 14, borderRadius: 16, border: "none", background: T.gradient, color: "#fff", fontSize: 15, fontWeight: "800", fontFamily: "inherit", cursor: "pointer", boxShadow: T.glow },
-  cancelBtn:   { width: "100%", padding: 13, borderRadius: 16, border: "none", background: "rgba(255,255,255,0.08)", color: T.textSec, fontSize: 14, fontWeight: "600", fontFamily: "inherit", cursor: "pointer", marginTop: 8 },
-  dangerBtn:   { width: "100%", padding: 13, borderRadius: 16, border: "1.5px solid rgba(229,72,77,0.5)", background: "transparent", color: "#FF6B70", fontSize: 14, fontWeight: "700", fontFamily: "inherit", cursor: "pointer", marginTop: 4 },
-  row:         { display: "flex", alignItems: "center", gap: 12, padding: "14px 4px", borderBottom: "1px solid rgba(255,255,255,0.06)" },
+  cancelBtn:   { width: "100%", padding: 13, borderRadius: 16, border: "none", background: T.raised, color: T.textSec, fontSize: 14, fontWeight: "600", fontFamily: "inherit", cursor: "pointer", marginTop: 8 },
+  dangerBtn:   { width: "100%", padding: 13, borderRadius: 16, border: `1px solid ${T.danger}`, background: "transparent", color: T.danger, fontSize: 14, fontWeight: "700", fontFamily: "inherit", cursor: "pointer", marginTop: 4 },
+  row:         { display: "flex", alignItems: "center", gap: 12, padding: "14px 4px", borderBottom: `1px solid ${T.border}` },
   memberAvatar:{ width: 42, height: 42, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "800", fontSize: 13, flexShrink: 0 },
-  acceptBtn:   { background: T.green, color: "#07281E", border: "none", borderRadius: 12, padding: "7px 12px", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: "800" },
-  declineBtn:  { background: "transparent", color: "#FF8A70", border: "1px solid rgba(255,138,112,0.5)", borderRadius: 12, padding: "7px 10px", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: "600" },
-  iconBtn:     { background: "rgba(255,255,255,0.07)", border: "none", borderRadius: 10, width: 30, height: 30, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
+  acceptBtn:   { background: T.green, color: T.onAccent, border: "none", borderRadius: 12, padding: "7px 12px", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: "800" },
+  declineBtn:  { background: "transparent", color: T.orange, border: `1px solid ${T.chip}`, borderRadius: 12, padding: "7px 10px", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: "600" },
+  iconBtn:     { background: T.raised, border: "none", borderRadius: 10, width: 44, height: 44, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
   addItemBtn:  { width: "100%", padding: 13, borderRadius: 16, border: `1.5px dashed ${T.orange}`, background: "transparent", color: T.orange, fontSize: 14, fontWeight: "700", fontFamily: "inherit", cursor: "pointer" },
-  input:       { padding: "11px 14px", borderRadius: 14, border: "1.5px solid transparent", background: T.muted, fontSize: 14, fontFamily: "inherit", outline: "none", width: "100%", boxSizing: "border-box", color: T.text },
-  aiBtn:       { position: "fixed", bottom: 24, right: 16, background: T.gradientPurple, color: "#fff", border: "none", borderRadius: 22, padding: "11px 18px", fontSize: 13, fontWeight: "800", fontFamily: "inherit", cursor: "pointer", boxShadow: "0 6px 20px rgba(139,124,255,0.45)", zIndex: 10, display: "flex", alignItems: "center", gap: 7 },
+  input:       { padding: "11px 14px", borderRadius: 14, border: "1.5px solid transparent", background: T.muted, fontSize: 16, fontFamily: "inherit", width: "100%", boxSizing: "border-box", color: T.text },
 }
 
 export default PlanDetailScreen

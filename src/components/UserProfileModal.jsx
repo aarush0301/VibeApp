@@ -1,3 +1,4 @@
+import ModalFrame from './ModalFrame.jsx'
 import { X } from 'lucide-react'
 import { T, getAvatarColor } from '../theme.js'
 import { getRatingStats, ratingLabel } from '../ratingUtils.js'
@@ -34,8 +35,7 @@ function UserProfileModal({ user, users, friendships, currentUserId, onSendReque
   }
 
   return (
-    <div style={styles.backdrop} className="backdrop-fade" onClick={onClose}>
-      <div style={styles.sheet} className="slide-up" onClick={e => e.stopPropagation()}>
+    <ModalFrame title="Profile" onClose={onClose} className="user-profile-sheet">
         <button onClick={onClose} className="tap" style={styles.closeBtn} aria-label="Close">
           <X size={16} color={T.textSec} />
         </button>
@@ -104,26 +104,23 @@ function UserProfileModal({ user, users, friendships, currentUserId, onSendReque
             </p>
           )}
         </div>
-      </div>
-    </div>
+    </ModalFrame>
   )
 }
 
 const styles = {
-  backdrop:     { position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 250, display: "flex", alignItems: "flex-end" },
-  sheet:        { position: "relative", background: T.card, borderRadius: "28px 28px 0 0", width: "100%", maxHeight: "88vh", overflowY: "auto", paddingTop: 28, boxShadow: T.shadow },
-  closeBtn:     { position: "absolute", top: 14, right: 14, background: "rgba(255,255,255,0.08)", border: "none", borderRadius: "50%", width: 32, height: 32, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
+  closeBtn:     { position: "absolute", top: 14, right: 14, background: T.raised, border: "none", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" },
   avatar:       { width: 76, height: 76, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "800", fontSize: 26, margin: "0 auto 12px", boxShadow: "0 0 0 4px rgba(255,255,255,0.06)" },
   name:         { fontSize: 21, fontWeight: "800", color: T.text, letterSpacing: -0.4, marginBottom: 4 },
   college:      { fontSize: 13, color: T.textMut, marginBottom: 10 },
-  label:        { fontSize: 10, background: "rgba(251,191,36,0.14)", color: T.yellow, padding: "2px 8px", borderRadius: 10, fontWeight: "700" },
+  label:        { fontSize: 10, background: "#FAEDCB", color: T.yellow, padding: "2px 8px", borderRadius: 10, fontWeight: "700" },
   primaryBtn:   { background: T.gradient, color: "#fff", border: "none", borderRadius: 18, padding: "10px 22px", fontSize: 13, fontWeight: "700", fontFamily: "inherit", cursor: "pointer", boxShadow: T.glow },
-  statusPill:   { background: "rgba(255,255,255,0.07)", color: T.green, borderRadius: 18, padding: "10px 18px", fontSize: 13, fontWeight: "700" },
-  ghostBtn:     { background: "transparent", color: "#FF8A70", border: "1px solid rgba(255,138,112,0.5)", borderRadius: 18, padding: "10px 16px", fontSize: 13, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" },
+  statusPill:   { background: T.raised, color: T.green, borderRadius: 18, padding: "10px 18px", fontSize: 13, fontWeight: "700" },
+  ghostBtn:     { background: "transparent", color: T.orange, border: `1px solid ${T.chip}`, borderRadius: 18, padding: "10px 16px", fontSize: 13, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" },
   body:         { padding: "16px 16px 32px" },
-  section:      { background: "rgba(255,255,255,0.04)", borderRadius: 20, padding: "16px 18px", marginBottom: 12 },
+  section:      { background: T.muted, borderRadius: 20, padding: "16px 18px", marginBottom: 12 },
   sectionLabel: { fontSize: 11, fontWeight: "700", color: T.textMut, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 },
-  vibePill:     { background: "rgba(139,124,255,0.16)", color: "#B4A9FF", fontSize: 13, padding: "6px 14px", borderRadius: 20, fontWeight: "500" },
+  vibePill:     { background: T.lavender, color: T.purple, fontSize: 13, padding: "6px 14px", borderRadius: 20, fontWeight: "500" },
 }
 
 export default UserProfileModal

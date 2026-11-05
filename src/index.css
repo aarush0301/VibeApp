@@ -1,14 +1,34 @@
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
-body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-  background: #0E0B1A;
-  color: #F5F3FF;
-  -webkit-font-smoothing: antialiased;
-}
-
-::-webkit-scrollbar { display: none; }
-button { font-family: inherit; }
-input, textarea, select { font-family: inherit; }
-input::placeholder, textarea::placeholder { color: #8A84A8; }
-input:focus, textarea:focus, select:focus { border-color: #8B7CFF !important; }
+@font-face { font-family: Manrope; src: url('/fonts/manrope-400.ttf') format('truetype'); font-weight: 400; font-display: swap; }
+@font-face { font-family: Manrope; src: url('/fonts/manrope-500.ttf') format('truetype'); font-weight: 500; font-display: swap; }
+@font-face { font-family: Manrope; src: url('/fonts/manrope-600.ttf') format('truetype'); font-weight: 600; font-display: swap; }
+@font-face { font-family: Manrope; src: url('/fonts/manrope-700.ttf') format('truetype'); font-weight: 700; font-display: swap; }
+@font-face { font-family: Manrope; src: url('/fonts/manrope-800.ttf') format('truetype'); font-weight: 800; font-display: swap; }
+:root { color-scheme: light; --bg: #fff9f4; --surface: #fff; --ink: #322b29; --secondary: #685c56; --muted: #786a62; --border: #e9ddd4; --accent: #b94732; --peach: #fbe0d5; --blue: #315f80; --blue-soft: #ddecf6; --font: 'Manrope', sans-serif; }
+* { box-sizing: border-box; margin: 0; padding: 0; scrollbar-width: thin; scrollbar-color: #c4aaa0 var(--bg); }
+body { font-family: var(--font); background: var(--bg); color: var(--ink); -webkit-font-smoothing: antialiased; line-height: 1.5; }
+button, input, textarea, select { font-family: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .55; }
+input, textarea, select { min-width: 0; max-width: 100%; caret-color: var(--accent); }
+input::placeholder, textarea::placeholder { color: var(--muted); opacity: 1; }
+button, a { touch-action: manipulation; }
+svg { flex-shrink: 0; }
+h1, h2, h3 { text-wrap: balance; overflow-wrap: anywhere; line-height: 1.2; letter-spacing: -.03em; }
+p { overflow-wrap: anywhere; }
+:where(button, input, textarea, select, a, [tabindex]):not([tabindex='-1']):focus-visible { outline: 2px solid var(--blue); outline-offset: 4px; }
+input:focus, textarea:focus, select:focus { border-color: var(--blue) !important; }
+::selection { background: #f5b8a6; color: var(--ink); }
+a { color: var(--accent); text-underline-offset: 4px; }
+.brand { display: inline-flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 800; font-size: 32px; letter-spacing: -.04em; line-height: 1; }
+.brand-mark { display: grid; place-items: center; width: 40px; height: 40px; border-radius: 50%; background: var(--accent); color: white; }
+.primary-button, .secondary-button { display: inline-flex; justify-content: center; align-items: center; gap: 8px; min-height: 46px; padding: 11px 19px; border-radius: 12px; border: none; font-size: 14px; font-weight: 700; }
+.primary-button { background: var(--accent); color: white; }
+.secondary-button { background: var(--surface); border: 1px solid var(--border); color: var(--ink); }
+.muted-copy { color: var(--secondary); font-size: 14px; }
+.page-heading { font-size: clamp(28px, 3vw, 38px); font-weight: 800; letter-spacing: -.035em; }
+.page-description { margin-top: 9px; color: var(--secondary); font-size: 14px; }
+.empty-state { grid-column: 1 / -1; padding: 48px 24px; text-align: center; background: #f7eee7; border-radius: 16px; }
+.empty-state > svg { margin-bottom: 14px; color: var(--accent); }
+.empty-state h2 { font-size: 22px; margin-bottom: 8px; }
+.empty-state p { color: var(--secondary); font-size: 14px; max-width: 38ch; margin-inline: auto; }
+.empty-state button { margin-top: 20px; }

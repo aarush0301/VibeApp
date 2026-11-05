@@ -1,3 +1,5 @@
+import ModalFrame from './ModalFrame.jsx'
+import { X } from 'lucide-react'
 import { useState } from 'react'
 import { T, getAvatarColor } from '../theme.js'
 
@@ -41,11 +43,10 @@ function FriendsModal({ users, friendships, currentUserId, onSendRequest, onAcce
   ]
 
   return (
-    <div style={styles.backdrop} className="backdrop-fade">
-      <div style={styles.sheet} className="slide-up">
+    <ModalFrame title="Friends" onClose={onClose}>
         <div style={styles.header}>
-          <h2 style={{ margin: 0, fontSize: 18, fontWeight: "700", color: T.text }}>Friends 👥</h2>
-          <button onClick={onClose} className="tap" style={styles.closeBtn}>✕</button>
+          <h2 style={{ margin: 0, fontSize: 18, fontWeight: "700", color: T.text }}>Your people</h2>
+          <button aria-label="Close friends" onClick={onClose} className="tap" style={styles.closeBtn}><X size={19} /></button>
         </div>
 
         <div style={styles.tabRow}>
@@ -53,6 +54,7 @@ function FriendsModal({ users, friendships, currentUserId, onSendRequest, onAcce
             <button
               key={t.id}
               onClick={() => setTab(t.id)}
+              aria-pressed={tab === t.id}
               className="chip-tap"
               style={{ ...styles.tabBtn, background: tab === t.id ? T.orange : T.muted, color: tab === t.id ? "#fff" : T.textSec }}
             >
@@ -88,8 +90,8 @@ function FriendsModal({ users, friendships, currentUserId, onSendRequest, onAcce
                 return (
                   <Row key={f.id} user={u} right={
                     <div style={{ display: "flex", gap: 6 }}>
-                      <button onClick={() => onAccept(f.id)} className="tap" style={styles.acceptBtn}>✓ Accept</button>
-                      <button onClick={() => onRemove(f.id)} className="tap" style={styles.ghostBtn}>✕</button>
+                      <button onClick={() => onAccept(f.id)} className="tap" style={styles.acceptBtn}>Accept</button>
+                      <button aria-label={`Decline ${u.name}’s request`} onClick={() => onRemove(f.id)} className="tap" style={styles.ghostBtn}>Decline</button>
                     </div>
                   } />
                 )
@@ -113,7 +115,7 @@ function FriendsModal({ users, friendships, currentUserId, onSendRequest, onAcce
               <input
                 value={query}
                 onChange={e => setQuery(e.target.value)}
-                placeholder="Search by name or college..."
+                aria-label="Search people by name or college" placeholder="Search by name or college..."
                 style={styles.input}
               />
               {q.length < 2 && <p style={styles.empty}>Type at least 2 letters.</p>}
@@ -125,27 +127,24 @@ function FriendsModal({ users, friendships, currentUserId, onSendRequest, onAcce
                 if (!f) {
                   right = <button onClick={() => onSendRequest(u.id)} className="tap" style={styles.acceptBtn}>+ Add</button>
                 } else if (f.status === "accepted") {
-                  right = <span style={{ fontSize: 12, color: "#50D4A0" }}>✓ Friends</span>
+                  right = <span style={{ fontSize: 12, color: T.green }}>✓ Friends</span>
                 } else if (f.requester_id === currentUserId) {
                   right = <span style={{ fontSize: 12, color: T.yellow }}>Pending</span>
                 } else {
-                  right = <button onClick={() => onAccept(f.id)} className="tap" style={styles.acceptBtn}>✓ Accept</button>
+                  right = <button onClick={() => onAccept(f.id)} className="tap" style={styles.acceptBtn}>Accept</button>
                 }
                 return <Row key={u.id} user={u} right={right} />
               })}
             </>
           )}
         </div>
-      </div>
-    </div>
+    </ModalFrame>
   )
 }
 
 const styles = {
-  backdrop:  { position: "fixed", inset: 0, background: "rgba(0,0,0,0.8)", zIndex: 100, display: "flex", alignItems: "flex-end" },
-  sheet:     { background: T.card, borderRadius: "20px 20px 0 0", width: "100%", maxHeight: "90vh", display: "flex", flexDirection: "column", border: `1px solid ${T.border}` },
   header:    { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "18px 20px 14px", borderBottom: `1px solid ${T.border}`, flexShrink: 0 },
-  closeBtn:  { background: T.muted, border: "none", borderRadius: "50%", width: 30, height: 30, cursor: "pointer", fontSize: 14, color: T.textSec },
+  closeBtn:  { background: T.muted, border: "none", borderRadius: "50%", width: 44, height: 44, cursor: "pointer", fontSize: 14, color: T.textSec, display: 'grid', placeItems: 'center' },
   tabRow:    { display: "flex", gap: 8, padding: "12px 20px", flexShrink: 0, overflowX: "auto" },
   tabBtn:    { padding: "7px 14px", borderRadius: 20, border: "none", fontSize: 13, fontWeight: "600", fontFamily: "inherit", cursor: "pointer", whiteSpace: "nowrap" },
   body:      { overflowY: "auto", padding: "4px 20px 32px" },
@@ -153,9 +152,9 @@ const styles = {
   avatar:    { width: 40, height: 40, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "700", fontSize: 13, flexShrink: 0 },
   label:     { fontSize: 11, fontWeight: "700", color: T.textMut, textTransform: "uppercase", letterSpacing: "0.6px", marginBottom: 10 },
   empty:     { textAlign: "center", padding: "30px 0", color: T.textMut, fontSize: 14 },
-  input:     { width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, background: T.muted, fontSize: 14, fontFamily: "inherit", outline: "none", color: T.text, marginBottom: 14 },
+  input:     { width: "100%", boxSizing: "border-box", padding: "11px 14px", borderRadius: 10, border: `1.5px solid ${T.border}`, background: T.muted, fontSize: 16, fontFamily: "inherit", color: T.text, marginBottom: 14 },
   acceptBtn: { background: T.green, color: "#fff", border: "none", borderRadius: 8, padding: "6px 12px", fontSize: 12, fontFamily: "inherit", cursor: "pointer", fontWeight: "600" },
-  ghostBtn:  { background: "transparent", color: "#FF8060", border: "1px solid #FF8060", borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "inherit", cursor: "pointer" },
+  ghostBtn:  { background: "transparent", color: T.orange, border: `1px solid ${T.chip}`, borderRadius: 8, padding: "6px 10px", fontSize: 12, fontFamily: "inherit", cursor: "pointer" },
 }
 
 export default FriendsModal

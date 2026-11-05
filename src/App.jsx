@@ -9,8 +9,11 @@ import PlanDetailScreen  from './components/PlanDetailScreen.jsx'
 import BottomNav         from './components/BottomNav.jsx'
 import CreatePlanModal   from './components/CreatePlanModal.jsx'
 import AuthScreen        from './components/AuthScreen.jsx'
-import { fetchAllData, fetchRatings, fetchFriendships, fetchNotifications } from './supabaseHelpers.js'
+import { fetchAllData, fetchPlanDetails, fetchRatings, fetchFriendships, fetchNotifications } from './supabaseHelpers.js'
 import NotificationsModal from './components/NotificationsModal.jsx'
+import Brand from './components/Brand.jsx'
+import './App.css'
+import './components/ModalFrame.css'
 
 
 function App() {
@@ -31,6 +34,9 @@ function App() {
   const [notifications, setNotifications]         = useState([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [viewingUserId, setViewingUserId] = useState(null)
+  const [details, setDetails] = useState({})
+  const selectedPlanRef = useRef(null)
+  useEffect(() => { selectedPlanRef.current = selectedPlanId }, [selectedPlanId])
   // ── Load everything from Supabase ─────────────────────────────────────────
   const loadData = async () => {
   // Never run two loads at once. A change that arrives mid-load triggers one more load afterwards.
@@ -64,6 +70,23 @@ hasLoaded.current = true
   }
 }
 
+const loadPlanDetails = async (planId) => {
+  if (!planId) return
+  try {
+    const d = await fetchPlanDetails(planId)
+    setDetails(prev => ({ ...prev, [planId]: d }))
+  } catch (error) {
+    console.error('Plan details failed:', error)
+  }
+}
+
+useEffect(() => {
+  if (!selectedPlanId) return
+
+  const timeoutId = setTimeout(() => loadPlanDetails(selectedPlanId), 0)
+  return () => clearTimeout(timeoutId)
+}, [selectedPlanId])
+
   // Check if a session already exists (so refreshing doesn't log you out)
   useEffect(() => {
     const checkSession = async () => {
@@ -80,27 +103,34 @@ hasLoaded.current = true
   useEffect(() => {
   if (!currentUserId) return
 
-  let debounce = null
-  const refresh = () => {
-    clearTimeout(debounce)
-    debounce = setTimeout(() => loadData(true), 300)
+  let coreTimer = null
+  let detailTimer = null
+  const initialLoad = setTimeout(() => loadData(), 0)
+  const refreshCore = () => {
+    clearTimeout(coreTimer)
+    coreTimer = setTimeout(() => loadData(true), 600)
+  }
+  const refreshDetails = () => {
+    clearTimeout(detailTimer)
+    detailTimer = setTimeout(() => loadPlanDetails(selectedPlanRef.current), 300)
   }
 
   const channel = supabase.channel('vibe-live')
-  const tables = [
-    'users', 'plans', 'plan_members', 'plan_requests',
-    'itinerary_items', 'messages', 'ratings', 'friendships','notifications'
-  ]
-  tables.forEach(table => {
-    channel.on('postgres_changes', { event: '*', schema: 'public', table }, refresh)
-  })
+  ;['users', 'plans', 'plan_members', 'plan_requests', 'ratings', 'friendships', 'notifications']
+    .forEach(table => channel.on('postgres_changes', { event: '*', schema: 'public', table }, refreshCore))
+  ;['itinerary_items', 'messages']
+    .forEach(table => channel.on('postgres_changes', { event: '*', schema: 'public', table }, refreshDetails))
   channel.subscribe()
 
-  // Slow safety-net refresh in case the connection drops
-  const fallback = setInterval(() => loadData(true), 60000)
+  const fallback = setInterval(() => {
+    loadData(true)
+    loadPlanDetails(selectedPlanRef.current)
+  }, 60000)
 
   return () => {
-    clearTimeout(debounce)
+    clearTimeout(initialLoad)
+    clearTimeout(coreTimer)
+    clearTimeout(detailTimer)
     clearInterval(fallback)
     supabase.removeChannel(channel)
   }
@@ -138,6 +168,7 @@ hasLoaded.current = true
     setNotifications([])
     setShowNotifications(false)
     setViewingUserId(null)
+    setDetails({})
   }
 
   // ── Join request ───────────────────────────────────────────────────────────
@@ -166,14 +197,14 @@ hasLoaded.current = true
     await supabase.from('itinerary_items').insert({
       id: item.id, plan_id: planId, time: item.time, activity: item.activity, note: item.note,
     })
-    await loadData()
+    await loadPlanDetails(planId)
   }
 
   const handleSendMessage = async (planId, message) => {
     await supabase.from('messages').insert({
       id: message.id, plan_id: planId, user_id: message.userId, text: message.text,
     })
-    await loadData()
+    await loadPlanDetails(planId)
   }
 
 const handleSendFriendRequest = async (otherId) => {
@@ -267,7 +298,7 @@ const handleDeleteNotification = async (id) => {
     alert("Couldn't update this item" + (error ? ": " + error.message : ". You may not have permission."))
     return false
   }
-  await loadData(true)
+  await loadPlanDetails(selectedPlanRef.current)
   return true
 }
 
@@ -281,7 +312,7 @@ const handleDeleteItineraryItem = async (itemId) => {
     alert("Couldn't delete this item" + (error ? ": " + error.message : ". You may not have permission."))
     return
   }
-  await loadData(true)
+  await loadPlanDetails(selectedPlanRef.current)
 }
 
   const handleUpdateProfile = async (updatedData) => {
@@ -328,7 +359,10 @@ const handleDeleteItineraryItem = async (itemId) => {
     setScreen("myplans")
   }
 
-  const currentPlan = plans.find(p => p.id === selectedPlanId)
+  const basePlan = plans.find(p => p.id === selectedPlanId)
+  const currentPlan = basePlan
+   ? { ...basePlan, itinerary: details[basePlan.id]?.itinerary || [], chat: details[basePlan.id]?.chat || [] }
+  : undefined
   useEffect(() => {
   if (screen === "planDetail" && hasLoaded.current && !currentPlan) {
     setSelectedPlanId(null)
@@ -343,8 +377,9 @@ const handleDeleteItineraryItem = async (itemId) => {
   // Still checking if a session exists
   if (!authChecked) {
     return (
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: "100vh", background: "#0B1133", color: "#fff", fontFamily: "system-ui" }}>
-        Loading...
+      <div className="app-status" role="status">
+        <Brand />
+        Getting things ready…
       </div>
     )
   }
@@ -357,23 +392,22 @@ const handleDeleteItineraryItem = async (itemId) => {
   // Logged in but still fetching plans/users
   if (loading || databaseError) {
     return (
-      <div style={{
-        display: "flex", alignItems: "center", justifyContent: "center",
-        height: "100vh", background: "#0B1133", color: "#fff", fontFamily: "system-ui",
-      }}>
+      <div className="app-status">
+        <Brand />
         {databaseError ? (
-          <div role="alert">
-            <p>Database error: {databaseError}</p>
-            <button type="button" onClick={loadData}>Retry</button>
+          <div role="alert" className="status-message">
+            <h1 className="page-heading">Couldn’t load your plans.</h1>
+            <p className="page-description">{databaseError}</p>
+            <button type="button" className="primary-button" onClick={loadData}>Try again</button>
           </div>
-        ) : 'Loading your plans...'}
+        ) : <p role="status">Finding your next good plan…</p>}
       </div>
     )
   }
 
   return (
-    <div style={{ maxWidth: "480px", margin: "0 auto", minHeight: "100vh", fontFamily: "system-ui, sans-serif" }}>
-      <div>
+    <div className="app-shell">
+      <main className="app-main">
         {screen === "home" &&
           <HomeScreen
             plans={plans}
@@ -382,6 +416,7 @@ const handleDeleteItineraryItem = async (itemId) => {
             currentUserId={currentUserId}
             unreadCount={notifications.filter(n => !n.read).length}
             onOpenNotifications={() => setShowNotifications(true)}
+            onCreatePlan={() => setShowCreateModal(true)}
           />
         }
         {screen === "myplans" &&
@@ -393,6 +428,8 @@ const handleDeleteItineraryItem = async (itemId) => {
             onAcceptRequest={handleAcceptRequest}
             onDeclineRequest={handleDeclineRequest}
             onOpenProfile={handleOpenUserProfile}
+            onCreatePlan={() => setShowCreateModal(true)}
+            onDiscover={() => setScreen('home')}
           />
         }
         
@@ -439,15 +476,13 @@ const handleDeleteItineraryItem = async (itemId) => {
       onClose={() => setShowNotifications(false)}
     />
   )}
-      </div>
+      </main>
 
-      {screen !== "planDetail" && (
         <BottomNav
           currentScreen={screen}
           onNavigate={setScreen}
           onCreatePlan={() => setShowCreateModal(true)}
         />
-      )}
 
       {showCreateModal && (
         <CreatePlanModal

@@ -1,5 +1,6 @@
 
 import { useState } from 'react'
+import { Pencil, Users, Radio, LogOut } from 'lucide-react'
 import { T, getAvatarColor } from '../theme.js'
 import { getRatingStats, ratingLabel } from '../ratingUtils.js'
 import Stars from './Stars.jsx'
@@ -27,80 +28,66 @@ function ProfileScreen({
   const pendingIn     = myFriendships.filter(f => f.status === "pending" && f.addressee_id === currentUserId).length
 
   return (
-    <div style={styles.screen}>
+    <section className="app-page profile-page">
       {/* Hero */}
-      <div style={styles.hero}>
-        <div style={{ ...styles.avatar, background: getAvatarColor(user.name) }}>{initials}</div>
-        <h1 style={styles.name}>{user.name}</h1>
-        <p style={styles.college}>{user.college}</p>
+      <div className="profile-cover"><p>Your people.<br />Your kind of energy.</p><Radio size={48} strokeWidth={1.3} aria-hidden="true" /></div>
+      <div>
+        <div className="profile-intro">
+        <div className="avatar profile-avatar" style={{ background: getAvatarColor(user.name) }}>{initials}</div>
+        <div><h1 className="page-heading">{user.name}</h1>
+        <p className="page-description">{user.college}</p>
 
-        <div style={{ marginBottom: 12 }}>
+        <div style={{ marginTop: 10 }}>
           {stats ? (
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
               <Stars score={stats.avg} size={14} />
               <span style={{ fontSize: 13, fontWeight: "700", color: T.yellow }}>{stats.avg}</span>
               <span style={{ fontSize: 11, color: T.textMut }}>({stats.count} ratings)</span>
-              <span style={{ fontSize: 10, background: "#2A2008", color: T.yellow, padding: "2px 7px", borderRadius: 10, fontWeight: "600" }}>{ratingLabel(stats.avg)}</span>
+              <span style={{ fontSize: 10, background: "#FAEDCB", color: T.yellow, padding: "2px 7px", borderRadius: 10, fontWeight: "600" }}>{ratingLabel(stats.avg)}</span>
             </span>
           ) : (
             <span style={{ fontSize: 12, color: T.textMut }}>No ratings yet</span>
           )}
         </div>
+        </div></div>
 
-        <div style={{ display: "flex", gap: 8, justifyContent: "center", marginBottom: 16 }}>
-          <button onClick={() => setShowEdit(true)} className="tap" style={styles.pillBtn}>✏️ Edit Profile</button>
-          <button onClick={() => setShowFriends(true)} className="tap" style={styles.pillBtn}>
-            👥 Friends ({friendCount})
+        <div className="profile-actions">
+          <button onClick={() => setShowEdit(true)} className="secondary-button tap"><Pencil size={15} aria-hidden="true" /> Edit Profile</button>
+          <button onClick={() => setShowFriends(true)} className="secondary-button tap">
+            <Users size={15} aria-hidden="true" /> Friends ({friendCount})
             {pendingIn > 0 && <span style={styles.badge}>{pendingIn}</span>}
           </button>
         </div>
 
-        <div style={styles.statsRow}>
-          {[["Year", user.year || "-"], ["Age", user.age || "-"], ["Created", plansCreated], ["Joined", plansJoined]].map(([label, value], i, arr) => (
-            <div key={label} style={{ display: "flex", alignItems: "center" }}>
-              <div style={styles.statItem}>
-                <div style={styles.statValue}>{value}</div>
-                <div style={styles.statLabel}>{label}</div>
-              </div>
-              {i < arr.length - 1 && <div style={styles.statDivider} />}
+        <dl className="profile-stats">
+          {[["Year", user.year || "-"], ["Age", user.age || "-"], ["Created", plansCreated], ["Joined", plansJoined]].map(([label, value]) => (
+            <div key={label}>
+              <dt>{label}</dt>
+              <dd>{value}</dd>
             </div>
           ))}
-        </div>
+        </dl>
       </div>
 
       {user.bio && (
-        <div style={styles.section}>
-          <p style={styles.sectionLabel}>About</p>
+        <div className="profile-section">
+          <h2>A little about you</h2>
           <p style={styles.bioText}>{user.bio}</p>
         </div>
       )}
 
       {user.vibes?.length > 0 && (
-        <div style={styles.section}>
-          <p style={styles.sectionLabel}>Vibes</p>
+        <div className="profile-section">
+          <h2>Your frequency</h2>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-            {user.vibes.map(vibe => <span key={vibe} style={styles.vibePill}>{vibe}</span>)}
+            {user.vibes.map(vibe => <span key={vibe} className="vibe-pill">{vibe}</span>)}
           </div>
         </div>
       )}
 
-      <div style={styles.section}>
-        <p style={styles.sectionLabel}>Activity</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          <div style={{ background: "#2D1810", borderRadius: 14, padding: 16, textAlign: "center" }}>
-            <div style={{ fontSize: 28, fontWeight: "800", color: T.orange, marginBottom: 4 }}>{plansCreated}</div>
-            <div style={{ fontSize: 12, fontWeight: "600", color: "#FF8060" }}>Plans Created</div>
-          </div>
-          <div style={{ background: "#1A1840", borderRadius: 14, padding: 16, textAlign: "center" }}>
-            <div style={{ fontSize: 28, fontWeight: "800", color: T.purple, marginBottom: 4 }}>{plansJoined}</div>
-            <div style={{ fontSize: 12, fontWeight: "600", color: "#A09EFF" }}>Plans Joined</div>
-          </div>
-        </div>
-      </div>
-
       {user.ratings?.length > 0 && (
-        <div style={styles.section}>
-          <p style={styles.sectionLabel}>Reviews from past plans</p>
+        <div className="profile-section">
+          <h2>Word from the crew</h2>
           {[...user.ratings].reverse().map(r => {
             const rater = users.find(u => u.id === r.rater_id)
             return (
@@ -116,9 +103,9 @@ function ProfileScreen({
         </div>
       )}
 
-      <div style={{ padding: "0 16px", marginBottom: 20 }}>
-        <button onClick={onLogout} className="tap" style={{ width: "100%", padding: 13, borderRadius: 12, border: "1.5px solid #4A2A1A", background: "transparent", color: "#FF8060", fontSize: 14, fontWeight: "600", fontFamily: "inherit", cursor: "pointer" }}>
-          Log Out
+      <div style={{ paddingTop: 28, marginBottom: 20 }}>
+        <button onClick={onLogout} className="secondary-button tap">
+          <LogOut size={16} />Log Out
         </button>
       </div>
 
@@ -144,27 +131,13 @@ function ProfileScreen({
           onClose={() => setShowFriends(false)}
         />
       )}
-    </div>
+    </section>
   )
 }
 
 const styles = {
-  screen:       { paddingBottom: 100, minHeight: "100vh", background: T.bg },
-  hero:         { background: T.card, padding: "52px 20px 28px", textAlign: "center", borderBottom: `1px solid ${T.border}`, marginBottom: 12 },
-  avatar:       { width: 80, height: 80, borderRadius: "50%", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontWeight: "800", fontSize: 28, margin: "0 auto 16px", boxShadow: "0 4px 20px rgba(0,0,0,0.4)" },
-  name:         { fontSize: 22, fontWeight: "800", color: T.text, marginBottom: 4, letterSpacing: -0.3 },
-  college:      { fontSize: 13, color: T.textMut, marginBottom: 10 },
-  pillBtn:      { background: T.muted, color: T.textSec, border: `1px solid ${T.chip}`, borderRadius: 20, padding: "7px 16px", fontSize: 13, fontWeight: "600", fontFamily: "inherit", cursor: "pointer", display: "inline-flex", alignItems: "center", gap: 6 },
-  badge:        { background: T.orange, color: "#fff", borderRadius: 10, fontSize: 10, fontWeight: "700", padding: "1px 6px" },
-  statsRow:     { display: "flex", justifyContent: "center", alignItems: "center", background: T.muted, borderRadius: 16, padding: "14px 8px" },
-  statItem:     { flex: 1, textAlign: "center", padding: "0 8px" },
-  statValue:    { fontSize: 18, fontWeight: "800", color: T.text },
-  statLabel:    { fontSize: 10, color: T.textMut, textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 2 },
-  statDivider:  { width: 1, height: 28, background: T.chip },
-  section:      { background: T.card, borderRadius: 20, padding: "18px 20px", marginBottom: 12, marginLeft: 16, marginRight: 16, border: `1px solid ${T.border}` },
-  sectionLabel: { fontSize: 11, fontWeight: "700", color: T.textMut, textTransform: "uppercase", letterSpacing: "0.8px", marginBottom: 10 },
+  badge:        { background: T.orange, color: T.bg, borderRadius: 10, fontSize: 11, fontWeight: "700", padding: "1px 6px" },
   bioText:      { fontSize: 14, color: T.textSec, lineHeight: 1.6 },
-  vibePill:     { background: T.muted, color: T.textSec, fontSize: 13, padding: "6px 14px", borderRadius: 20, fontWeight: "500", border: `1px solid ${T.chip}` },
 }
 
 export default ProfileScreen
