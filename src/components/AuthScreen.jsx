@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ArrowRight, CircleAlert, Eye, EyeOff, Coffee, Mountain, Utensils } from 'lucide-react'
+import { ArrowRight, CircleAlert, CircleCheck, Eye, EyeOff, Coffee, Mountain, Utensils } from 'lucide-react'
 import { supabase } from '../supabaseClient.js'
 import { T } from '../theme.js'
 import './AuthScreen.css'
@@ -15,6 +15,7 @@ function AuthScreen({ onAuthSuccess }) {
   const [loading, setLoading]   = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const isSignup = mode === 'signup'
+  const [notice, setNotice] = useState("")
 
   const changeMode = nextMode => {
     setMode(nextMode)
@@ -26,41 +27,37 @@ function AuthScreen({ onAuthSuccess }) {
     event.preventDefault()
     if (loading) return
     setError("")
+    setNotice("")
     if (!email.trim() || !password) return setError("Enter your email and password.")
     if (isSignup && (!name.trim() || !college.trim())) return setError("Enter your full name and college.")
 
     setLoading(true)
     try {
       if (isSignup) {
-        const { data, error: signUpError } = await supabase.auth.signUp({
-          email: email.trim(),
-          password,
-        })
-        if (signUpError) {
-          setError(signUpError.message)
-          return
-        }
-        if (!data.user) {
-          setError('Your account could not be created. Please try again.')
-          return
-        }
+  const { data, error: signUpError } = await supabase.auth.signUp({
+    email: email.trim(),
+    password,
+    options: { data: { name: name.trim(), college: college.trim() } },
+  })
+  if (signUpError) {
+    setError(signUpError.message)
+    return
+  }
+  if (!data.user) {
+    setError('Your account could not be created. Please try again.')
+    return
+  }
 
-        const newUserId = data.user.id
-        const { error: profileError } = await supabase.from('users').insert({
-          id: newUserId,
-          name: name.trim(),
-          college: college.trim(),
-          year: "",
-          age: null,
-          bio: "",
-          vibes: [],
-        })
-        if (profileError) {
-          setError("Account created but profile setup failed: " + profileError.message)
-          return
-        }
-        onAuthSuccess(newUserId)
-      } else {
+  // With email confirmation on, there is no session until the user clicks the link
+  if (!data.session) {
+    setPassword("")
+    setMode("login")
+    setNotice("Account created. Check your email, click the confirmation link, then log in.")
+    return
+  }
+
+  onAuthSuccess(data.user.id)
+} else {
         const { data, error: loginError } = await supabase.auth.signInWithPassword({
           email: email.trim(),
           password,
@@ -120,6 +117,13 @@ function AuthScreen({ onAuthSuccess }) {
                 <p>{error}</p>
               </div>
             )}
+
+            {notice && (
+  <div role="status" style={{ display: "flex", gap: 10, alignItems: "flex-start", padding: "12px 14px", borderRadius: 14, background: "rgba(52,211,153,0.14)", color: "#5EE0B0", fontSize: 14, lineHeight: 1.5, marginBottom: 16 }}>
+    <CircleCheck size={18} aria-hidden="true" style={{ flexShrink: 0, marginTop: 1 }} />
+    <p>{notice}</p>
+  </div>
+)}
 
             <div className="auth-fields">
               {isSignup && (
