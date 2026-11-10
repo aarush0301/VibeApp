@@ -3,7 +3,8 @@ import { useState, useRef, useEffect } from 'react'
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
-import { GoogleGenerativeAI } from '@google/generative-ai'
+import { supabase } from '../supabaseClient.js'
+
 import { T } from '../theme.js'
 import { Send, X } from 'lucide-react'
 
@@ -15,7 +16,7 @@ L.Icon.Default.mergeOptions({
   shadowUrl:     'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-const GEMINI_KEY = import.meta.env.VITE_GEMINI_KEY
+
 
 function extractCoordinates(text) {
   const regex = /\[(-?\d+\.?\d*),\s*(-?\d+\.?\d*)\]/g
@@ -58,9 +59,7 @@ function AIChatPanel({ plan, onClose }) {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" })
   }, [messages])
 
-  const itineraryText = plan.itinerary.length > 0
-    ? plan.itinerary.map(i => `${i.time} - ${i.activity}`).join(", ")
-    : "No itinerary yet"
+  
 
   const sendMessage = async () => {
     if (!input.trim() || loading) return
@@ -71,38 +70,18 @@ function AIChatPanel({ plan, onClose }) {
     setLoading(true)
 
     try {
-      // Use the official Google Generative AI SDK
-      const genAI = new GoogleGenerativeAI(GEMINI_KEY)
-      const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" })
-
-      const prompt = `
-You are a helpful and fun trip planning assistant for a college social app called Vibe App.
-
-Current plan details:
-- Title: ${plan.title}
-- Type: ${plan.type}
-- Location: ${plan.location}
-- Date: ${plan.date}
-- Time: ${plan.time}
-- Description: ${plan.description}
-- Current Itinerary: ${itineraryText}
-
-The user is asking: "${userMessage}"
-
-Instructions:
-- Give helpful specific suggestions relevant to ${plan.location}
-- Keep your tone fun and casual
-- For EVERY specific place you mention include its coordinates like this: [latitude, longitude]
-- Example: "Visit Abbey Falls [12.4051, 75.6551] — it's stunning!"
-- Only use real accurate coordinates
-- Keep it to 3 to 5 suggestions max
-- You can only READ the itinerary not change it
-- You can also suggest if any plan in the itinerary should better be changed as they might be closed or currently it might not be the best to go for it and suggest alternatives if they are better.
-
-`
-
-      const result = await model.generateContent(prompt)
-      const reply  = result.response.text()
+      const { data: { session } } = await supabase.auth.getSession()
+const response = await fetch('/api/gemini', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    Authorization: `Bearer ${session?.access_token || ''}`,
+  },
+  body: JSON.stringify({ planId: plan.id, question: userMessage }),
+})
+const result = await response.json()
+if (!response.ok) throw new Error(result.error || 'The AI request failed.')
+const reply = result.reply
 
       const coords = extractCoordinates(reply)
       if (coords.length > 0) {

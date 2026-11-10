@@ -36,6 +36,9 @@ function App() {
   const [viewingUserId, setViewingUserId] = useState(null)
   const [details, setDetails] = useState({})
   const selectedPlanRef = useRef(null)
+  const [recovering, setRecovering] = useState(
+  () => window.location.hash.includes('type=recovery')
+)
   useEffect(() => { selectedPlanRef.current = selectedPlanId }, [selectedPlanId])
   // ── Load everything from Supabase ─────────────────────────────────────────
   const loadData = async () => {
@@ -79,6 +82,14 @@ const loadPlanDetails = async (planId) => {
     console.error('Plan details failed:', error)
   }
 }
+
+
+useEffect(() => {
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    if (event === 'PASSWORD_RECOVERY') setRecovering(true)
+  })
+  return () => subscription.unsubscribe()
+}, [])
 
 useEffect(() => {
   if (!selectedPlanId) return
@@ -145,6 +156,8 @@ useEffect(() => {
     setSelectedPlanId(null)
     setScreen("home")
   }
+
+  
 
   const handleOpenUserProfile = (id) => {
   if (id === currentUserId) {
@@ -373,6 +386,20 @@ const handleDeleteItineraryItem = async (itemId) => {
     ...user,
     ratings: ratings.filter(rating => rating.host_id === user.id),
   }))
+
+  if (recovering) {
+  return (
+    <AuthScreen
+      key="reset"
+      recovery
+      onAuthSuccess={() => {}}
+      onRecoveryDone={() => {
+        window.history.replaceState(null, '', window.location.pathname)
+        setRecovering(false)
+      }}
+    />
+  )
+}
 
   // Still checking if a session exists
   if (!authChecked) {
