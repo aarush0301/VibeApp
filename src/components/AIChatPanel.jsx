@@ -1,12 +1,11 @@
-import ModalFrame from './ModalFrame.jsx'
 import { useState, useRef, useEffect } from 'react'
-import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import 'leaflet/dist/leaflet.css'
 import L from 'leaflet'
 import { supabase } from '../supabaseClient.js'
 
 import { T } from '../theme.js'
-import { Send, X } from 'lucide-react'
+import { Send, Minus, Sparkles } from 'lucide-react'
 
 // Fix leaflet marker icons
 delete L.Icon.Default.prototype._getIconUrl
@@ -41,7 +40,17 @@ function formatText(text) {
     .trim()
 }
 
-function AIChatPanel({ plan, onClose }) {
+function ResizeMap() {
+  const map = useMap()
+  useEffect(() => {
+    const observer = new ResizeObserver(() => map.invalidateSize({ pan: false }))
+    observer.observe(map.getContainer())
+    return () => observer.disconnect()
+  }, [map])
+  return null
+}
+
+function AIChatPanel({ plan, onClose, isVisible = true }) {
   const [messages, setMessages] = useState([
     {
       role: "assistant",
@@ -53,11 +62,12 @@ function AIChatPanel({ plan, onClose }) {
   const [loading, setLoading]       = useState(false)
   const [mapCoords, setMapCoords]   = useState([])
   const [mapCenter, setMapCenter]   = useState([12.9716, 77.5946])
-  const bottomRef                   = useRef(null)
+  const messageListRef              = useRef(null)
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" })
-  }, [messages])
+    const list = messageListRef.current
+    if (list) list.scrollTop = list.scrollHeight
+  }, [messages, loading, isVisible])
 
   
 
@@ -104,25 +114,27 @@ const reply = result.reply
   }
 
   return (
-    <ModalFrame title="AI Assistant" onClose={onClose} className="ai-sheet">
+    <section className="ai-panel" aria-labelledby="ai-panel-title">
 
         {/* Header */}
-        <div style={styles.header}>
+        <header className="ai-header">
           <div>
-            <h2 style={styles.headerTitle}>AI Assistant</h2>
-            <p style={styles.headerSub}>{plan.title} · {plan.location}</p>
+            <h2 id="ai-panel-title"><Sparkles size={18} aria-hidden="true" /> AI Assistant</h2>
+            <p title={`${plan.title} · ${plan.location}`}>{plan.title} · {plan.location}</p>
           </div>
-          <button onClick={onClose} style={styles.closeBtn} aria-label="Close AI assistant"><X size={20} /></button>
-        </div>
+          <button onClick={onClose} className="ai-minimize" aria-label="Minimize AI assistant"><Minus size={20} aria-hidden="true" /></button>
+        </header>
 
         {/* Map */}
-        {mapCoords.length > 0 && <div style={styles.mapContainer}>
+        {mapCoords.length > 0 && <div className="ai-map" role="region" aria-label="Suggested places map">
           <MapContainer
             center={mapCenter}
             zoom={12}
+            scrollWheelZoom={false}
             style={{ width: "100%", height: "100%" }}
             key={mapCenter.toString()}
           >
+            <ResizeMap />
             <TileLayer
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               attribution='© OpenStreetMap contributors'
@@ -136,7 +148,7 @@ const reply = result.reply
         </div>}
 
         {/* Messages */}
-        <div style={styles.messageList}>
+        <div ref={messageListRef} className="ai-messages" role="log" aria-label="AI conversation" aria-live="polite" tabIndex={0}>
           {messages.map((msg, i) => (
             <div key={i} style={{
               ...styles.messageRow,
@@ -162,45 +174,33 @@ const reply = result.reply
             </div>
           )}
 
-          <div ref={bottomRef} />
         </div>
 
         {/* Input */}
-        <div style={styles.inputRow}>
+        <form className="ai-composer" onSubmit={event => { event.preventDefault(); sendMessage() }}>
           <input
             value={input}
             aria-label="Message AI assistant"
             onChange={e => setInput(e.target.value)}
-            onKeyDown={e => e.key === "Enter" && sendMessage()}
             placeholder="Ask about places, food, activities..."
-            style={styles.input}
-            disabled={loading}
+            className="ai-input"
           />
           <button
-            onClick={sendMessage}
+            type="submit"
             aria-label="Send message"
-            disabled={loading}
-            style={{ ...styles.sendBtn, opacity: loading ? 0.5 : 1 }} className="send-tap"
+            disabled={loading || !input.trim()}
+            className="ai-send send-tap"
           >
             <Send size={18} aria-hidden="true" />
           </button>
-        </div>
+        </form>
 
-    </ModalFrame>
+    </section>
   )
 }
 
 const styles = {
-  header:       { display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", background: T.card, borderRadius: "20px 20px 0 0", borderBottom: `1px solid ${T.border}`, flexShrink: 0 },
-  headerTitle:  { margin: 0, fontSize: 17, fontWeight: "700", color: T.text },
-  headerSub:    { margin: "2px 0 0", fontSize: 12, color: T.textMut },
-  closeBtn:     { background: "transparent", border: "none", borderRadius: 8, width: 44, height: 44, cursor: "pointer", color: T.textSec, flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" },
-  mapContainer: { height: "220px", flexShrink: 0 },
-  messageList:  { flex: 1, overflowY: "auto", padding: "16px", display: "flex", flexDirection: "column", gap: 10, background: T.bg },
   messageRow:   { display: "flex" },
-  bubble:       { maxWidth: "78%", padding: "10px 14px", fontSize: 14, lineHeight: 1.5, overflowWrap: "anywhere" },
-  inputRow:     { display: "flex", gap: 8, padding: "12px 16px", background: T.card, borderTop: `1px solid ${T.border}`, flexShrink: 0 },
-  input:        { flex: 1, minWidth: 0, padding: "10px 12px", borderRadius: 8, border: `1px solid ${T.chip}`, background: T.bg, fontSize: 16, color: T.text },
-  sendBtn:      { width: 44, height: 44, borderRadius: 8, background: T.orange, border: "none", color: T.bg, cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center" },
+  bubble:       { maxWidth: "88%", minWidth: 0, padding: "10px 14px", fontSize: 14, lineHeight: 1.5, overflowWrap: "anywhere" },
 }
 export default AIChatPanel

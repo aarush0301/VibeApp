@@ -475,6 +475,7 @@ const handleDeleteItineraryItem = async (itemId) => {
         }
         {screen === "planDetail" && currentPlan &&
           <PlanDetailScreen
+            key={currentPlan.id}
             plan={currentPlan}
             users={usersWithRatings}
             currentUserId={currentUserId}

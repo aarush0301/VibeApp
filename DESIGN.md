@@ -145,7 +145,9 @@ Manrope weights 400, 500, 600, 700, and 800 are self-hosted under `public/fonts`
 
 ## Layout
 
-The app shell caps at 1500px. Desktop navigation occupies a 244px rail, narrowing to 210px below 1100px. The work area caps at 1160px; profile and detail surfaces cap at 900px. Default page padding is 48px, reducing to 28px and then 20px at smaller widths.
+The app shell caps at 1500px. Desktop navigation occupies a 244px rail, narrowing to 210px below 1100px. The work area and plan details cap at 1160px; profile surfaces cap at 900px. Default page padding is 48px, reducing to 28px and then 20px at smaller widths.
+
+Plan details open with the AI assistant visible. At 1200px and above it sits in a sticky 320–380px column beside the plan; below that it stacks between the plan summary and detail tabs. Minimize returns space to the plan and preserves the conversation and draft. Both chats scroll within their message lists. The assistant map takes at most 30% of the panel height, leaving the conversation and composer accessible.
 
 At 800px and below, navigation becomes a four-item bottom bar with safe-area padding. Page content reserves space for it. Plan details use a back action on phones. Plan lists use two columns and become one below 560px. Activity filters scroll horizontally inside their own row.
 

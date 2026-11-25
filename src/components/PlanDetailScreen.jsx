@@ -5,6 +5,7 @@ import { getRatingStats, ratingLabel } from '../ratingUtils.js'
 import Stars from './Stars.jsx'
 import RateModal from './RateModal.jsx'
 import CancelPlanModal from './CancelPlanModal.jsx'
+import './AIChatPanel.css'
 
 const AIChatPanel = lazy(() => import('./AIChatPanel.jsx'))
 
@@ -29,13 +30,15 @@ function PlanDetailScreen({
   const [editActivity, setEditActivity]       = useState("")
   const [editNote, setEditNote]               = useState("")
   const [chatInput, setChatInput]             = useState("")
-  const [showAI, setShowAI]                   = useState(false)
+  const [showAI, setShowAI]                   = useState(true)
   const [showRate, setShowRate]               = useState(false)
   const [showCancel, setShowCancel]           = useState(false)
 
-  const chatEndRef = useRef(null)
+  const chatListRef = useRef(null)
+  const aiToggleRef = useRef(null)
   useEffect(() => {
-    if (activeTab === "chat") chatEndRef.current?.scrollIntoView({ behavior: "smooth" })
+    const list = chatListRef.current
+    if (activeTab === "chat" && list) list.scrollTop = list.scrollHeight
   }, [plan.chat.length, activeTab])
 
   const getUserById = id =>
@@ -119,10 +122,22 @@ function PlanDetailScreen({
   return (
     <section className="app-page detail-page">
 
-      {/* Back */}
-      <button onClick={onBack} className="detail-back tap">
-        <ArrowLeft size={18} /> Back to plans
-      </button>
+      <div className="detail-toolbar">
+        <button onClick={onBack} className="detail-back tap">
+          <ArrowLeft size={18} /> Back to plans
+        </button>
+        <button
+          ref={aiToggleRef}
+          onClick={() => setShowAI(visible => !visible)}
+          className="detail-ai-toggle secondary-button"
+          aria-expanded={showAI}
+          aria-controls="plan-ai-assistant"
+        >
+          <Sparkles size={16} aria-hidden="true" /> AI Assistant
+        </button>
+      </div>
+
+      <div className={`detail-workspace${showAI ? '' : ' is-ai-collapsed'}`}>
 
       {/* Header */}
       <div className="detail-header" style={{ background: config.bg }}>
@@ -141,6 +156,21 @@ function PlanDetailScreen({
         </div>
       </div>
 
+      <aside id="plan-ai-assistant" className="detail-assistant" aria-label="AI Assistant" hidden={!showAI}>
+        <Suspense fallback={<div className="ai-panel ai-loading" role="status">Loading AI assistant...</div>}>
+          <AIChatPanel
+            key={plan.id}
+            plan={plan}
+            isVisible={showAI}
+            onClose={() => {
+              setShowAI(false)
+              aiToggleRef.current?.focus()
+            }}
+          />
+        </Suspense>
+      </aside>
+
+      <div className="detail-body">
       {/* Tabs */}
       <div className="detail-tabs" role="tablist" aria-label="Plan details">
         {tabs.map(tab => (
@@ -418,7 +448,7 @@ function PlanDetailScreen({
         {/* ═════ CHAT ═════ */}
         {activeTab === "chat" && isMember && (
           <div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 16 }}>
+            <div ref={chatListRef} className="group-chat-messages" role="log" aria-label="Group conversation" tabIndex={0}>
               {plan.chat.length === 0 && (
                 <div style={{ textAlign: "center", padding: "40px 0", color: T.textMut, fontSize: 14 }}>No messages yet. Say hi.</div>
               )}
@@ -446,7 +476,6 @@ function PlanDetailScreen({
                   </div>
                 )
               })}
-              <div ref={chatEndRef} />
             </div>
 
             <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
@@ -471,10 +500,8 @@ function PlanDetailScreen({
         )}
       </div>
 
-      {/* Floating AI button */}
-      <button onClick={() => setShowAI(true)} className="ai-launch tap">
-        <Sparkles size={15} /> AI Assistant
-      </button>
+      </div>
+      </div>
 
       {showRate && (
         <RateModal
@@ -493,11 +520,6 @@ function PlanDetailScreen({
         />
       )}
 
-      {showAI && (
-        <Suspense fallback={null}>
-          <AIChatPanel plan={plan} onClose={() => setShowAI(false)} />
-        </Suspense>
-      )}
     </section>
   )
 }
