@@ -1,9 +1,10 @@
-import { MapPin, Calendar, Clock, Navigation, Globe2, LockKeyhole, ArrowUpRight } from 'lucide-react'
+﻿import { MapPin, Calendar, Clock, Navigation, Globe2, LockKeyhole, ArrowUpRight } from 'lucide-react'
 import { T, TYPE_CONFIG, getAvatarColor, formatDate } from '../theme.js'
 import Stars from './Stars.jsx'
+import Avatar from './Avatar.jsx'
 import ActivityIcon from './ActivityIcon.jsx'
 
-export default function PlanCard({ plan, creatorName, distance, creatorRating, participation }) {
+export default function PlanCard({ plan, creatorName, creatorAvatar, distance, creatorRating, participation }) {
   const config = TYPE_CONFIG[plan.type] || TYPE_CONFIG.Other
   const spotsLeft = Math.max(0, plan.maxMembers - plan.memberIds.length)
   const initials = creatorName ? creatorName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() : '??'
@@ -24,7 +25,7 @@ export default function PlanCard({ plan, creatorName, distance, creatorRating, p
       </div>
       <div className="plan-footer">
         <div className="plan-host">
-          <div className="avatar" style={{ background: getAvatarColor(creatorName) }}>{initials}</div>
+         <Avatar url={creatorAvatar} className="avatar" style={{ background: getAvatarColor(creatorName) }}>{initials}</Avatar>
           <div style={{ minWidth: 0 }}>
             <div className="plan-host-name">{participation === 'created' ? 'Created by you' : creatorName || 'Unknown'}</div>
             <div className="plan-rating">{participation === 'created' ? `${plan.memberIds.length} members` : creatorRating ? <><Stars score={creatorRating.avg} size={11} /><span>{creatorRating.avg} ({creatorRating.count})</span></> : 'New host'}</div>

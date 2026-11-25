@@ -45,6 +45,7 @@ export async function fetchAllData() {
   const users = usersData.map(x => ({
     id: x.id, name: x.name, college: x.college, year: x.year,
     age: x.age, bio: x.bio, vibes: x.vibes || [],
+    avatarUrl: x.avatar_url || null,
   }))
 
   return { plans, users }

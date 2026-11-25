@@ -4,9 +4,9 @@ import { Pencil, Users, Radio, LogOut } from 'lucide-react'
 import { T, getAvatarColor } from '../theme.js'
 import { getRatingStats, ratingLabel } from '../ratingUtils.js'
 import Stars from './Stars.jsx'
+import Avatar from './Avatar.jsx'
 import EditProfileModal from './EditProfileModal.jsx'
 import FriendsModal from './FriendsModal.jsx'
-
 function ProfileScreen({
   currentUserId, plans, users, friendships,
   onUpdateProfile, onLogout,
@@ -33,7 +33,7 @@ function ProfileScreen({
       <div className="profile-cover"><p>Your people.<br />Your kind of energy.</p><Radio size={48} strokeWidth={1.3} aria-hidden="true" /></div>
       <div>
         <div className="profile-intro">
-        <div className="avatar profile-avatar" style={{ background: getAvatarColor(user.name) }}>{initials}</div>
+        <Avatar url={user.avatarUrl} style={{ ...styles.avatar, background: getAvatarColor(user.name) }}>{initials}</Avatar>
         <div><h1 className="page-heading">{user.name}</h1>
         <p className="page-description">{user.college}</p>
 

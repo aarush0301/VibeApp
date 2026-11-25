@@ -2,6 +2,7 @@ import ModalFrame from './ModalFrame.jsx'
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import { T, getAvatarColor } from '../theme.js'
+import Avatar from './Avatar.jsx'
 
 const initials = name => name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
 
@@ -25,7 +26,7 @@ function FriendsModal({ users, friendships, currentUserId, onSendRequest, onAcce
 
   const Row = ({ user, right }) => (
     <div style={styles.row}>
-      <div style={{ ...styles.avatar, background: getAvatarColor(user.name) }}>{initials(user.name)}</div>
+      <Avatar url={user.avatarUrl} style={{ ...styles.avatar, background: getAvatarColor(user.name) }}>{initials(user.name)}</Avatar>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ fontSize: 14, fontWeight: "600", color: T.text }}>{user.name}</div>
         <div style={{ fontSize: 12, color: T.textMut, marginTop: 2 }}>

@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { T, getAvatarColor } from '../theme.js'
 import { getRatingStats, ratingLabel } from '../ratingUtils.js'
 import Stars from './Stars.jsx'
+import Avatar from './Avatar.jsx'
 
 function UserProfileModal({ user, users, friendships, currentUserId, onSendRequest, onAccept, onRemove, onClose }) {
   const initials = user.name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
@@ -41,7 +42,7 @@ function UserProfileModal({ user, users, friendships, currentUserId, onSendReque
         </button>
 
         <div style={{ textAlign: "center", padding: "8px 20px 0" }}>
-          <div style={{ ...styles.avatar, background: getAvatarColor(user.name) }}>{initials}</div>
+          <Avatar url={user.avatarUrl} className="avatar profile-avatar" style={{ background: getAvatarColor(user.name) }}>{initials}</Avatar>
           <h2 style={styles.name}>{user.name}</h2>
           <p style={styles.college}>
             {user.college}{user.year ? ` · ${user.year} yr` : ""}{user.age ? ` · ${user.age}` : ""}

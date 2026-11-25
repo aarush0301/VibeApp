@@ -1,10 +1,13 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import { getAvatarColor } from '../theme.js'
 import { getDistanceKm, getUserLocation } from '../locationUtils.js'
 import { getRatingStats } from '../ratingUtils.js'
 import { MapPin, Bell, Plus, Compass, ArrowUpRight } from 'lucide-react'
 import PlanCard from './PlanCard.jsx'
 import ActivityIcon from './ActivityIcon.jsx'
+import Avatar from './Avatar.jsx'
+
+
 
 const FILTERS   = ["All", "Party", "Trip", "Outing", "Food Run", "Sports", "Study Sesh"]
 const DISTANCES = [
@@ -13,6 +16,7 @@ const DISTANCES = [
   { label: "15 km", value: 15 },
   { label: "50 km", value: 50 },
 ]
+
 
 function Chip({ label, active, onClick }) {
   return (
@@ -77,8 +81,8 @@ function HomeScreen({ plans, users, onOpenPlan, currentUserId, unreadCount, onOp
             <Bell size={20} />
             {unreadCount > 0 && <span className="notification-count">{unreadCount > 9 ? "9+" : unreadCount}</span>}
           </button>
-          <div className="avatar" style={{ background: getAvatarColor(currentUser?.name || "x") }} aria-label={currentUser?.name || 'Your profile'}>{initials}</div>
-        </div>
+         <Avatar url={currentUser?.avatarUrl} className="avatar" style={{ background: getAvatarColor(currentUser?.name || "x") }} aria-label={currentUser?.name || 'Your profile'}>{initials}</Avatar>
+      </div>
       </div>
 
       <div className="welcome-strip">
@@ -134,6 +138,7 @@ function HomeScreen({ plans, users, onOpenPlan, currentUserId, unreadCount, onOp
               <PlanCard
                 plan={plan}
                 creatorName={creator?.name || "Unknown"}
+                creatorAvatar={creator?.avatarUrl}
                 distance={plan.distance}
                 creatorRating={getRatingStats(creator?.ratings)}
               />

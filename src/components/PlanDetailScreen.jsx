@@ -6,6 +6,7 @@ import Stars from './Stars.jsx'
 import RateModal from './RateModal.jsx'
 import CancelPlanModal from './CancelPlanModal.jsx'
 import './AIChatPanel.css'
+import Avatar from './Avatar.jsx'
 
 const AIChatPanel = lazy(() => import('./AIChatPanel.jsx'))
 
@@ -291,9 +292,9 @@ function PlanDetailScreen({
               const canEdit = plan.selectMembers?.includes(uid)
               return (
                 <div key={uid} style={styles.row}>
-                  <div {...profileTrigger(uid)} style={{ ...styles.memberAvatar, background: getAvatarColor(u.name), cursor: "pointer" }}>
-                    {initialsOf(u.name)}
-                  </div>
+                  <Avatar url={u.avatarUrl} {...profileTrigger(uid)} style={{ ...styles.memberAvatar, background: getAvatarColor(u.name), cursor: "pointer" }}>
+  {initialsOf(u.name)}
+</Avatar>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontSize: 14, fontWeight: "700", color: T.text, display: "flex", alignItems: "center", gap: 6 }}>
                       {u.name}
@@ -349,9 +350,9 @@ function PlanDetailScreen({
                   const u = getUserById(uid)
                   return (
                     <div key={uid} style={{ display: "flex", alignItems: "center", gap: 12, background: "#FAEDCB", borderRadius: 18, padding: 12, marginBottom: 10 }}>
-                      <div {...profileTrigger(uid)} style={{ ...styles.memberAvatar, background: getAvatarColor(u.name), cursor: "pointer" }}>
+                      <Avatar url={u.avatarUrl} {...profileTrigger(uid)} style={{ ...styles.memberAvatar, background: getAvatarColor(u.name), cursor: "pointer" }}>
                         {initialsOf(u.name)}
-                      </div>
+                        </Avatar>
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, fontWeight: "700", color: T.text }}>{u.name}</div>
                         <div style={{ fontSize: 11, color: T.textMut, marginTop: 2 }}>
@@ -458,9 +459,9 @@ function PlanDetailScreen({
                 return (
                   <div key={msg.id} style={{ display: "flex", gap: 8, alignItems: "flex-end", flexDirection: isMe ? "row-reverse" : "row" }}>
                     {!isMe && (
-                      <div {...profileTrigger(msg.userId)} style={{ ...styles.memberAvatar, width: 36, height: 36, fontSize: 11, background: getAvatarColor(sender.name), cursor: "pointer" }}>
+                      <Avatar url={sender.avatarUrl} {...profileTrigger(msg.userId)} style={{ ...styles.memberAvatar, width: 36, height: 36, fontSize: 11, background: getAvatarColor(sender.name), cursor: "pointer" }}>
                         {initialsOf(sender.name)}
-                      </div>
+                      </Avatar>
                     )}
                     <div style={{ maxWidth: "72%" }}>
                       {!isMe && <div style={{ fontSize: 11, color: T.textMut, marginBottom: 3 }}>{sender.name.split(" ")[0]}</div>}

@@ -3,6 +3,8 @@ import { T, getAvatarColor } from '../theme.js'
 import { getRatingStats } from '../ratingUtils.js'
 import PlanCard from './PlanCard.jsx'
 import { CalendarDays, Plus } from 'lucide-react'
+import Avatar from './Avatar.jsx'
+
 
 const initialsOf = name => name.split(" ").map(n => n[0]).join("").slice(0, 2).toUpperCase()
 
@@ -99,6 +101,7 @@ function MyPlansScreen({
                   <PlanCard
                     plan={plan}
                     creatorName={creator.name}
+                    creatorAvatar={creator.avatarUrl}
                     creatorRating={getRatingStats(creator.ratings)}
                     participation={activeTab}
                   />
@@ -114,7 +117,7 @@ function MyPlansScreen({
                       return (
                         <div key={uid} style={styles.requestRow}>
                           <button type="button" onClick={() => onOpenProfile(uid)} aria-label={`View ${u.name}’s profile`} className="tap" style={styles.requester}>
-                            <span style={{ ...styles.avatar, background: getAvatarColor(u.name) }}>{initialsOf(u.name)}</span>
+                            <Avatar as="span" url={u.avatarUrl} style={{ ...styles.avatar, background: getAvatarColor(u.name) }}>{initialsOf(u.name)}</Avatar>
                             <span style={{ minWidth: 0 }}>
                               <span style={styles.requesterName}>{u.name}</span>
                               <span style={styles.requesterCollege}>{u.college}{u.year ? ` · ${u.year} yr` : ''}</span>

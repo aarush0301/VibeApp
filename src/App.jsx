@@ -328,22 +328,24 @@ const handleDeleteItineraryItem = async (itemId) => {
   await loadPlanDetails(selectedPlanRef.current)
 }
 
-  const handleUpdateProfile = async (updatedData) => {
-    await supabase
+    const handleUpdateProfile = async (updatedData) => {
+    const { error } = await supabase
       .from('users')
       .update({
-        name:    updatedData.name,
-        college: updatedData.college,
-        year:    updatedData.year,
-        age:     updatedData.age,
-        bio:     updatedData.bio,
-        vibes:   updatedData.vibes,
+        name:       updatedData.name,
+        college:    updatedData.college,
+        year:       updatedData.year,
+        age:        updatedData.age,
+        bio:        updatedData.bio,
+        vibes:      updatedData.vibes,
+        avatar_url: updatedData.avatarUrl,
       })
       .eq('id', currentUserId)
+    if (error) { alert("Couldn't save profile: " + error.message); return }
 
     await loadData()
   }
-
+  
   const handleCreatePlan = async (formData) => {
     const newPlanId = "PLAN-" + Date.now()
 
